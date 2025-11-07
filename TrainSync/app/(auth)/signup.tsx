@@ -30,7 +30,7 @@ const handleSignUp = async () => {
     await SecureStore.setItemAsync("jwt", JSON.stringify(response.data));
     alert(`Signup successful for ${email}`);
     // navigate to home or main app screen
-    router.push("//index"); 
+    router.replace("/(tabs)/home"); 
   } catch (error: any) {
     console.error(error);
     alert(error.response?.data?.message || "Sign up failed");
