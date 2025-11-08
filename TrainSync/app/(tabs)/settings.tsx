@@ -6,21 +6,25 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { getCurrentUser, UserDetails, updateUser } from "../api/user";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";  
 
-
-const router = useRouter();
-
 export default function Settings() {
+  const router = useRouter();
   const [user, setUser] = useState<UserDetails | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null); // URI for display
+  const [selectedImageBase64, setSelectedImageBase64] = useState<string | null>(null); // Base64 for upload
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -40,22 +44,57 @@ export default function Settings() {
 
   const handleEdit = () => setIsEditing(true);
 
-  const handleSave = async () => {
-  if (!user) return;
-  try {
-    const updatedUser = { ...user, name, age: Number(age) };
-    
-    // Call API to update user details
-    await updateUser(updatedUser);
+  const handlePickImage = async () => {
+    try {
+      // Request permission to access media library
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission denied", "We need access to your photos to upload a profile picture.");
+        return;
+      }
 
-    // Update local state
-    setUser(updatedUser);
-    setIsEditing(false);
-  } catch (err) {
-    console.error("Failed to update user:", err);
-    alert("Failed to update user details.");
-  }
-};
+      // Launch image picker with base64 option
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+        base64: true, // Get base64 directly
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImage(result.assets[0].uri); // URI for display
+        if (result.assets[0].base64) {
+          setSelectedImageBase64(result.assets[0].base64); // Base64 for upload
+        }
+      }
+    } catch (err) {
+      console.error("Error picking image:", err);
+      Alert.alert("Error", "Failed to pick image. Please try again.");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      const updatedUser = { ...user, name, age: Number(age) };
+      
+      // Call API to update user details (including profile picture if selected)
+      const result = await updateUser(updatedUser, selectedImageBase64);
+
+      // Update local state
+      setUser(result);
+      setSelectedImage(null);
+      setSelectedImageBase64(null);
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Failed to update user:", err);
+      Alert.alert("Error", "Failed to update user details.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
 
   const handleCancel = () => {
@@ -63,6 +102,8 @@ export default function Settings() {
       setName(user.name || "");
       setAge(user.age?.toString() || "");
     }
+    setSelectedImage(null);
+    setSelectedImageBase64(null);
     setIsEditing(false);
   };
 
@@ -83,11 +124,34 @@ export default function Settings() {
     );
   }
 
+  // Determine which image to display
+  const displayImage = selectedImage || user?.profilePictureUrl || null;
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Settings</Text>
 
-      <View style={styles.profileCircle} />
+      <View style={styles.profilePictureContainer}>
+        <View style={styles.profileCircle}>
+          {displayImage ? (
+            <Image
+              source={{ uri: displayImage }}
+              style={styles.profileImage}
+              contentFit="cover"
+            />
+          ) : null}
+        </View>
+        {isEditing && (
+          <TouchableOpacity
+            style={styles.editPictureButton}
+            onPress={handlePickImage}
+          >
+            <Text style={styles.editPictureButtonText}>
+              {user?.profilePictureUrl ? "Change" : "Add Photo"}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {user ? (
         <>
@@ -128,12 +192,18 @@ export default function Settings() {
               <TouchableOpacity
                 style={[styles.button, styles.saveButton]}
                 onPress={handleSave}
+                disabled={uploading}
               >
-                <Text style={styles.buttonText}>Save</Text>
+                {uploading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Save</Text>
+                )}
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.cancelButton]}
                 onPress={handleCancel}
+                disabled={uploading}
               >
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
@@ -195,13 +265,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#334155",
   },
-  profileCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#1e293b",
-    alignSelf: "center",
+  profilePictureContainer: {
+    alignItems: "center",
     marginBottom: 24,
+  },
+  profileCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#1e293b",
+    overflow: "hidden",
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: "#334155",
+  },
+  profileImage: {
+    width: "100%",
+    height: "100%",
+  },
+  editPictureButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: "#2563eb",
+  },
+  editPictureButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
   buttonRow: {
     flexDirection: "row",
