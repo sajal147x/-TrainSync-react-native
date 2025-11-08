@@ -176,8 +176,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignSelf: "center",
   },
-  field: { marginBottom: 18 },
-  label: { fontSize: 16, color: "#cbd5e1", marginBottom: 6 },
+  field: {
+    paddingVertical: 12,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#111827",
+  },
+  label: { fontSize: 16, color: "#cbd5e1", marginBottom: 6, fontWeight: "700" },
   value: { fontSize: 16, color: "#f1f5f9", paddingVertical: 8 },
   input: {
     fontSize: 16,
