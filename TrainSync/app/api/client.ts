@@ -14,10 +14,7 @@ client.interceptors.request.use(async (config) => {
   try {
     const stored = await SecureStore.getItemAsync("jwt");
     if (stored) {
-      const data = JSON.parse(stored); // parse the stored object
-      if (data.token) {
-        config.headers.Authorization = `Bearer ${data.token}`;
-      }
+        config.headers.Authorization = `Bearer ${stored}`;
     }
   } catch (err) {
     console.warn("Could not attach JWT to request:", err);

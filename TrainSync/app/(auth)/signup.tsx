@@ -9,34 +9,31 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { signUp } from "../api/auth";
 import * as SecureStore from "expo-secure-store";
-import { useRouter } from "expo-router";
-
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");  // new field
+  const [age, setAge] = useState("");    // new field
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  const router = useRouter(); // for navigation
+  const router = useRouter();
 
-const handleSignUp = async () => {
-  try {
-    const response = await signUp(email, password);
+  const handleSignUp = async () => {
+    try {
+      const response = await signUp(email, password);
+      await SecureStore.setItemAsync("jwt", response.data.access_token);
 
-    // store JWT token securely
-    await SecureStore.setItemAsync("jwt", JSON.stringify(response.data));
-    alert(`Signup successful for ${email}`);
-    // navigate to home or main app screen
-    router.replace("/(tabs)/home"); 
-  } catch (error: any) {
-    console.error(error);
-    alert(error.response?.data?.message || "Sign up failed");
-  }
-};
-
+      alert(`Signup successful for ${email}`);
+      router.replace("/(tabs)/home");
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Sign up failed");
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -50,8 +47,29 @@ const handleSignUp = async () => {
         </Text>
 
         <View style={styles.form}>
+          {/* Name */}
+          <Text style={styles.label}>Name</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder="Your name"
+            placeholderTextColor="#9AA4B2"
+            style={styles.input}
+          />
+
+          {/* Age */}
+          <Text style={[styles.label, { marginTop: 16 }]}>Age</Text>
+          <TextInput
+            value={age}
+            onChangeText={setAge}
+            placeholder="Your age"
+            placeholderTextColor="#9AA4B2"
+            style={styles.input}
+            keyboardType="numeric"
+          />
+
           {/* Email */}
-          <Text style={styles.label}>Email</Text>
+          <Text style={[styles.label, { marginTop: 16 }]}>Email</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
@@ -88,7 +106,6 @@ const handleSignUp = async () => {
             </TouchableOpacity>
           </View>
 
-          {/* Sign Up Button */}
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={handleSignUp}
@@ -96,23 +113,6 @@ const handleSignUp = async () => {
             <Text style={styles.primaryText}>Sign Up</Text>
           </TouchableOpacity>
 
-          {/* OR Divider */}
-          <View style={styles.orRow}>
-            <View style={styles.line} />
-            <Text style={styles.orText}>or</Text>
-            <View style={styles.line} />
-          </View>
-
-          {/* Continue with Google */}
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={() => console.log("TODO: Continue with Google")}
-          >
-            <Ionicons name="logo-google" size={18} color="#fff" />
-            <Text style={styles.googleText}>Continue with Google</Text>
-          </TouchableOpacity>
-
-          {/* Link to Sign In */}
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>Already have an account?</Text>
             <Link href="/signin" asChild>
@@ -124,11 +124,8 @@ const handleSignUp = async () => {
         </View>
       </View>
     </KeyboardAvoidingView>
-    
   );
 }
-
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0d1117" },
   inner: { flex: 1, justifyContent: "center", padding: 24 },
@@ -156,20 +153,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   primaryText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  orRow: { flexDirection: "row", alignItems: "center", marginVertical: 18 },
-  line: { flex: 1, height: 1, backgroundColor: "#0f1724" },
-  orText: { marginHorizontal: 12, color: "#9AA4B2" },
-  googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#374151",
-    backgroundColor: "transparent",
-  },
-  googleText: { marginLeft: 8, fontWeight: "600", color: "#e5e7eb" },
   footerRow: { flexDirection: "row", justifyContent: "center", marginTop: 20 },
   footerText: { color: "#9AA4B2" },
   signInLink: { color: "#60a5fa", fontWeight: "600" },
