@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
 import { getCurrentUser, UserDetails, updateUser } from "../api/user";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";  
@@ -55,7 +56,7 @@ export default function Settings() {
 
       // Launch image picker with base64 option
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: 'images',
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -129,28 +130,39 @@ export default function Settings() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
-
-      <View style={styles.profilePictureContainer}>
-        <View style={styles.profileCircle}>
-          {displayImage ? (
-            <Image
-              source={{ uri: displayImage }}
-              style={styles.profileImage}
-              contentFit="cover"
-            />
-          ) : null}
-        </View>
-        {isEditing && (
+      <View style={styles.header}>
+        <Text style={styles.title}>Settings</Text>
+        {!isEditing && user && (
           <TouchableOpacity
-            style={styles.editPictureButton}
-            onPress={handlePickImage}
+            style={styles.editIconButton}
+            onPress={handleEdit}
           >
-            <Text style={styles.editPictureButtonText}>
-              {user?.profilePictureUrl ? "Change" : "Add Photo"}
-            </Text>
+            <Ionicons name="pencil" size={24} color="#3b82f6" />
           </TouchableOpacity>
         )}
+      </View>
+
+      <View style={styles.profilePictureContainer}>
+        <TouchableOpacity
+          onPress={isEditing ? handlePickImage : undefined}
+          disabled={!isEditing}
+          activeOpacity={isEditing ? 0.7 : 1}
+        >
+          <View style={styles.profileCircle}>
+            {displayImage ? (
+              <Image
+                source={{ uri: displayImage }}
+                style={styles.profileImage}
+                contentFit="cover"
+              />
+            ) : null}
+            {isEditing && (
+              <View style={styles.editPictureIconOverlay}>
+                <Ionicons name="pencil" size={20} color="#fff" />
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
       </View>
 
       {user ? (
@@ -187,7 +199,7 @@ export default function Settings() {
             )}
           </View>
 
-          {isEditing ? (
+          {isEditing && (
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={[styles.button, styles.saveButton]}
@@ -208,13 +220,6 @@ export default function Settings() {
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            <TouchableOpacity
-              style={[styles.button, styles.editButton]}
-              onPress={handleEdit}
-            >
-              <Text style={styles.buttonText}>Edit</Text>
-            </TouchableOpacity>
           )}
 
           {/* Log Out Button */}
@@ -239,12 +244,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 24,
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   title: {
     fontSize: 28,
     fontWeight: "700",
     color: "#fff",
-    marginBottom: 20,
-    alignSelf: "center",
+  },
+  editIconButton: {
+    padding: 8,
   },
   field: {
     paddingVertical: 12,
@@ -278,21 +290,24 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 2,
     borderColor: "#334155",
+    position: "relative",
   },
   profileImage: {
     width: "100%",
     height: "100%",
   },
-  editPictureButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: "#2563eb",
-  },
-  editPictureButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
+  editPictureIconOverlay: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#3b82f6",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#0d1117",
   },
   buttonRow: {
     flexDirection: "row",
@@ -307,11 +322,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minWidth: 100,
-  },
-  editButton: {
-    backgroundColor: "#2563eb",
-    alignSelf: "center",
-    marginTop: 30,
   },
   saveButton: { backgroundColor: "#16a34a" },
   cancelButton: { backgroundColor: "#dc2626" },
