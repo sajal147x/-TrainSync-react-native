@@ -147,6 +147,7 @@ export default function Settings() {
           onPress={isEditing ? handlePickImage : undefined}
           disabled={!isEditing}
           activeOpacity={isEditing ? 0.7 : 1}
+          style={styles.profileTouchable}
         >
           <View style={styles.profileCircle}>
             {displayImage ? (
@@ -156,12 +157,12 @@ export default function Settings() {
                 contentFit="cover"
               />
             ) : null}
-            {isEditing && (
-              <View style={styles.editPictureIconOverlay}>
-                <Ionicons name="pencil" size={20} color="#fff" />
-              </View>
-            )}
           </View>
+          {isEditing && (
+            <View style={styles.editPictureIconOverlay}>
+              <Ionicons name="pencil" size={20} color="#fff" />
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -281,6 +282,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 24,
   },
+  profileTouchable: {
+    position: "relative",
+  },
   profileCircle: {
     width: 100,
     height: 100,
@@ -290,7 +294,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 2,
     borderColor: "#334155",
-    position: "relative",
   },
   profileImage: {
     width: "100%",
@@ -298,8 +301,8 @@ const styles = StyleSheet.create({
   },
   editPictureIconOverlay: {
     position: "absolute",
-    bottom: 0,
-    right: 0,
+    bottom: 12,
+    right: -4,
     backgroundColor: "#3b82f6",
     width: 32,
     height: 32,
