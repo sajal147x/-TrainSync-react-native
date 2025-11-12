@@ -12,6 +12,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { getCurrentUser, UserDetails, updateUser } from "../api/user";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";  
@@ -203,32 +205,68 @@ export default function Settings() {
           {isEditing && (
             <View style={styles.buttonRow}>
               <TouchableOpacity
-                style={[styles.button, styles.saveButton]}
-                onPress={handleSave}
-                disabled={uploading}
-              >
-                {uploading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Save</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
+                style={styles.liquidGlassButton}
                 onPress={handleCancel}
                 disabled={uploading}
+                activeOpacity={0.8}
               >
-                <Text style={styles.buttonText}>Cancel</Text>
+                <BlurView intensity={80} tint="dark" style={styles.blurView}>
+                  <LinearGradient
+                    colors={["rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.08)", "rgba(59, 130, 246, 0.15)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientOverlay}
+                  >
+                    <View style={styles.buttonInner}>
+                      <Text style={styles.liquidGlassButtonText}>Cancel</Text>
+                    </View>
+                  </LinearGradient>
+                </BlurView>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.liquidGlassButton}
+                onPress={handleSave}
+                disabled={uploading}
+                activeOpacity={0.8}
+              >
+                <BlurView intensity={80} tint="dark" style={styles.blurView}>
+                  <LinearGradient
+                    colors={["rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.08)", "rgba(59, 130, 246, 0.15)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientOverlay}
+                  >
+                    <View style={styles.buttonInner}>
+                      {uploading ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text style={styles.liquidGlassButtonText}>Save</Text>
+                      )}
+                    </View>
+                  </LinearGradient>
+                </BlurView>
               </TouchableOpacity>
             </View>
           )}
 
           {/* Log Out Button */}
           <TouchableOpacity
-            style={[styles.button, styles.logoutButton]}
+            style={styles.liquidGlassButtonLogout}
             onPress={handleLogout}
+            activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>Log Out</Text>
+            <BlurView intensity={80} tint="dark" style={styles.blurView}>
+              <LinearGradient
+                colors={["rgba(59, 130, 246, 0.25)", "rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.25)"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientOverlay}
+              >
+                <View style={styles.buttonInner}>
+                  <Text style={styles.liquidGlassButtonText}>Log Out</Text>
+                </View>
+              </LinearGradient>
+            </BlurView>
           </TouchableOpacity>
         </>
       ) : (
@@ -335,4 +373,51 @@ const styles = StyleSheet.create({
     minWidth: 120,
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  liquidGlassButton: {
+    borderRadius: 12,
+    overflow: "hidden",
+    minWidth: 100,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  blurView: {
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  gradientOverlay: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  buttonInner: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  liquidGlassButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  liquidGlassButtonLogout: {
+    borderRadius: 12,
+    overflow: "hidden",
+    alignSelf: "center",
+    marginTop: 20,
+    minWidth: 120,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.5)",
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 10,
+  },
 });
