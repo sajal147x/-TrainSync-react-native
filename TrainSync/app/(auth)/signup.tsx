@@ -11,7 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { signUp } from "../api/auth";
-import * as SecureStore from "expo-secure-store";
+import storage from "../api/storage";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -25,7 +25,7 @@ export default function SignUp() {
   const handleSignUp = async () => {
     try {
       const response = await signUp(email, password);
-      await SecureStore.setItemAsync("jwt", response.data.access_token);
+      await storage.setItemAsync("jwt", response.data.access_token);
 
       alert(`Signup successful for ${email}`);
       router.replace("/(tabs)/home");

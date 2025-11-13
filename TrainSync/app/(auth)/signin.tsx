@@ -11,7 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { signIn } from "../api/auth"; // your API call
-import * as SecureStore from "expo-secure-store";
+import storage from "../api/storage";
 
 
 export default function SignIn() {
@@ -25,7 +25,7 @@ export default function SignIn() {
     try {
       const response = await signIn(email, password);
        // after successful signup/signin
-    await SecureStore.setItemAsync("jwt", response.data.access_token);
+    await storage.setItemAsync("jwt", response.data.access_token);
 
       router.replace("/(tabs)/home");
     } catch (error: any) {

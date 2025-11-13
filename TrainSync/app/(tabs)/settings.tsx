@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { getCurrentUser, UserDetails, updateUser } from "../api/user";
-import * as SecureStore from "expo-secure-store";
+import storage from "../api/storage";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback } from "react";  
 
@@ -136,7 +136,7 @@ export default function Settings() {
 
   const handleLogout = async () => {
   try {
-    await SecureStore.deleteItemAsync("jwt"); // remove your JWT
+    await storage.deleteItemAsync("jwt"); // remove your JWT
     // Optionally, navigate to login
     router.replace("../(auth)/signin");
   } catch (err) {

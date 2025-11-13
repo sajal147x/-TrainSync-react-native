@@ -52,7 +52,7 @@ export async function getExercises(
 }
 
 export async function getMuscleTags(): Promise<string[]> {
-  const response = await client.get<string[]>("/exercises/muscle-tags");
+  const response = await client.get<string[]>("/exercises/muscletags");
   return response.data;
 }
 

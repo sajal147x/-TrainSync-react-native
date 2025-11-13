@@ -1,5 +1,5 @@
 import axios from "axios";
-import * as SecureStore from "expo-secure-store";
+import storage from "./storage";
 
 // Use your computer's IP if running on Expo mobile
 // To find your IP: run `ifconfig | grep "inet " | grep -v 127.0.0.1` on Mac/Linux
@@ -18,7 +18,7 @@ client.interceptors.request.use(async (config) => {
       config.headers = {} as any;
     }
     
-    const stored = await SecureStore.getItemAsync("jwt");
+    const stored = await storage.getItemAsync("jwt");
     if (stored) {
         config.headers.Authorization = `Bearer ${stored}`;
     }
