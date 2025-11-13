@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { ExerciseDto } from "../api/exercises";
-import { createNewWorkout, getWorkout } from "../api/workout";
+import { createNewWorkout, addExerciseToWorkout, getWorkout } from "../api/workout";
 
 interface ExerciseDetailsModalProps {
   visible: boolean;
@@ -22,6 +22,7 @@ interface ExerciseDetailsModalProps {
   onAddToWorkout: (exercise: ExerciseDto) => void;
   workoutName: string;
   workoutDate: string;
+  workoutId?: string; // Optional - if provided, we're adding to existing workout
 }
 
 const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
@@ -31,6 +32,7 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
   onAddToWorkout,
   workoutName,
   workoutDate,
+  workoutId,
 }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -41,21 +43,37 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
     try {
       setIsLoading(true);
       
-      console.log("🔵 Starting workout creation...");
-      console.log("📝 Request data:", { workoutName, workoutDate, exerciseId: exercise.id });
+      let resultWorkoutId: string;
       
-      // Create workout - returns workout ID as string
-      const workoutId = await createNewWorkout({
-        workoutName,
-        workoutDate,
-        exerciseId: exercise.id,
-      });
+      if (workoutId) {
+        // Adding exercise to existing workout
+        console.log("🔵 Adding exercise to existing workout...");
+        console.log("📝 Request data:", { workoutId, exerciseId: exercise.id });
+        
+        resultWorkoutId = await addExerciseToWorkout({
+          workoutId,
+          exerciseId: exercise.id,
+        });
+        
+        console.log("✅ Exercise added to workout! ID:", resultWorkoutId);
+      } else {
+        // Creating new workout
+        console.log("🔵 Starting workout creation...");
+        console.log("📝 Request data:", { workoutName, workoutDate, exerciseId: exercise.id });
+        
+        resultWorkoutId = await createNewWorkout({
+          workoutName,
+          workoutDate,
+          exerciseId: exercise.id,
+        });
+        
+        console.log("✅ Workout created successfully! ID:", resultWorkoutId);
+      }
       
-      console.log("✅ Workout created successfully! ID:", workoutId);
       console.log("🔵 Fetching workout details...");
       
       // Fetch the full workout object
-      const workout = await getWorkout(workoutId);
+      const workout = await getWorkout(resultWorkoutId);
       
       console.log("✅ Workout fetched successfully:", workout);
       

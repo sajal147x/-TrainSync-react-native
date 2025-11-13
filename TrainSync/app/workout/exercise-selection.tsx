@@ -20,6 +20,7 @@ const ExerciseSelection: React.FC = () => {
   const params = useLocalSearchParams();
   const workoutName = (params.workoutName as string) || "";
   const workoutDate = (params.workoutDate as string) || new Date().toISOString();
+  const workoutId = params.workoutId as string | undefined;
   const [exercises, setExercises] = useState<ExerciseDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -306,6 +307,7 @@ const ExerciseSelection: React.FC = () => {
         onAddToWorkout={handleAddToWorkout}
         workoutName={workoutName}
         workoutDate={workoutDate}
+        workoutId={workoutId}
       />
     </SafeAreaView>
   );

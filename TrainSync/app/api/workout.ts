@@ -6,6 +6,11 @@ export interface CreateWorkoutRequest {
   exerciseId: string;
 }
 
+export interface AddExerciseToWorkoutRequest {
+  workoutId: string;
+  exerciseId: string;
+}
+
 export interface ExerciseDto {
   name: string;
 }
@@ -22,6 +27,16 @@ export async function createNewWorkout(
 ): Promise<string> {
   const response = await client.post<string>(
     "/create-workout",
+    request
+  );
+  return response.data;
+}
+
+export async function addExerciseToWorkout(
+  request: AddExerciseToWorkoutRequest
+): Promise<string> {
+  const response = await client.post<string>(
+    "/add-exercise-to-workout",
     request
   );
   return response.data;
