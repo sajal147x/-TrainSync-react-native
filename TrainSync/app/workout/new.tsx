@@ -98,7 +98,13 @@ const NewWorkout: React.FC = () => {
         <TouchableOpacity
           style={styles.addExerciseButton}
           activeOpacity={0.8}
-          onPress={() => router.push("/workout/exercise-selection")}
+          onPress={() => router.push({
+            pathname: "/workout/exercise-selection",
+            params: {
+              workoutName,
+              workoutDate: workoutDate.toISOString(),
+            }
+          })}
         >
           <BlurView intensity={80} tint="dark" style={styles.blurView}>
             <LinearGradient

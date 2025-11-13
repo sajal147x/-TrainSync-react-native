@@ -1,22 +1,27 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Modal,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { ExerciseDto } from "../api/exercises";
+import { createNewWorkout, getWorkout } from "../api/workout";
 
 interface ExerciseDetailsModalProps {
   visible: boolean;
   exercise: ExerciseDto | null;
   onClose: () => void;
   onAddToWorkout: (exercise: ExerciseDto) => void;
+  workoutName: string;
+  workoutDate: string;
 }
 
 const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
@@ -24,12 +29,52 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
   exercise,
   onClose,
   onAddToWorkout,
+  workoutName,
+  workoutDate,
 }) => {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
   if (!exercise) return null;
 
-  const handleAddToWorkout = () => {
-    onAddToWorkout(exercise);
-    onClose();
+  const handleAddToWorkout = async () => {
+    try {
+      setIsLoading(true);
+      
+      console.log("🔵 Starting workout creation...");
+      console.log("📝 Request data:", { workoutName, workoutDate, exerciseId: exercise.id });
+      
+      // Create workout - returns workout ID as string
+      const workoutId = await createNewWorkout({
+        workoutName,
+        workoutDate,
+        exerciseId: exercise.id,
+      });
+      
+      console.log("✅ Workout created successfully! ID:", workoutId);
+      console.log("🔵 Fetching workout details...");
+      
+      // Fetch the full workout object
+      const workout = await getWorkout(workoutId);
+      
+      console.log("✅ Workout fetched successfully:", workout);
+      
+      onAddToWorkout(exercise);
+      onClose();
+      
+      // Navigate to continue page with the workout ID
+      router.push({
+        pathname: "/workout/continue",
+        params: {
+          workoutId: workout.exerciseId, // Backend incorrectly names this field
+        }
+      });
+    } catch (error) {
+      console.error("❌ Error in handleAddToWorkout:", error);
+      Alert.alert("Error", "Failed to add exercise to workout. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -82,6 +127,7 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
                 style={styles.addButton}
                 onPress={handleAddToWorkout}
                 activeOpacity={0.8}
+                disabled={isLoading}
               >
                 <BlurView intensity={80} tint="dark" style={styles.blurView}>
                   <LinearGradient
@@ -95,8 +141,14 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
                     style={styles.gradientOverlay}
                   >
                     <View style={styles.buttonInner}>
-                      <Ionicons name="add-circle" size={24} color="#fff" />
-                      <Text style={styles.addButtonText}>Add Exercise to Workout</Text>
+                      {isLoading ? (
+                        <Text style={styles.addButtonText}>Adding...</Text>
+                      ) : (
+                        <>
+                          <Ionicons name="add-circle" size={24} color="#fff" />
+                          <Text style={styles.addButtonText}>Add Exercise to Workout</Text>
+                        </>
+                      )}
                     </View>
                   </LinearGradient>
                 </BlurView>

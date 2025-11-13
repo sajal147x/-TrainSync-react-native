@@ -10,13 +10,16 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { getExercises, ExerciseDto, getMuscleTags } from "../api/exercises";
 import ExerciseDetailsModal from "../components/ExerciseDetailsModal";
 
 const ExerciseSelection: React.FC = () => {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const workoutName = (params.workoutName as string) || "";
+  const workoutDate = (params.workoutDate as string) || new Date().toISOString();
   const [exercises, setExercises] = useState<ExerciseDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -301,6 +304,8 @@ const ExerciseSelection: React.FC = () => {
         exercise={selectedExercise}
         onClose={() => setModalVisible(false)}
         onAddToWorkout={handleAddToWorkout}
+        workoutName={workoutName}
+        workoutDate={workoutDate}
       />
     </SafeAreaView>
   );
