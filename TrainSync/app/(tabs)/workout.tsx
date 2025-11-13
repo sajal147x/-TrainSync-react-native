@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { getRecentWorkouts, RecentWorkoutDto } from "../api/workoutTab";
 
 const Workout: React.FC = () => {
+  const router = useRouter();
   const [recentWorkouts, setRecentWorkouts] = useState<RecentWorkoutDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,8 +78,19 @@ const Workout: React.FC = () => {
                 <View style={styles.workoutCard}>
                   <BlurView intensity={60} tint="dark" style={styles.cardBlur}>
                     <View style={styles.cardContent}>
-                      <Text style={styles.workoutName}>{item.workoutName}</Text>
-                      <Text style={styles.workoutDate}>{formatDate(item.workoutDate)}</Text>
+                      <View style={styles.workoutInfo}>
+                        <Text style={styles.workoutName}>{item.workoutName}</Text>
+                        <Text style={styles.workoutDate}>{formatDate(item.workoutDate)}</Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => router.push({
+                          pathname: "/workout/continue",
+                          params: { workoutId: item.workoutId }
+                        })}
+                      >
+                        <Ionicons name="create-outline" size={24} color="#3b82f6" />
+                      </TouchableOpacity>
                     </View>
                   </BlurView>
                 </View>
@@ -186,6 +199,12 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  workoutInfo: {
+    flex: 1,
   },
   workoutName: {
     color: "#fff",
@@ -196,6 +215,10 @@ const styles = StyleSheet.create({
   workoutDate: {
     color: "#9ca3af",
     fontSize: 14,
+  },
+  editButton: {
+    padding: 8,
+    marginLeft: 8,
   },
 });
 

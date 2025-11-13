@@ -167,7 +167,7 @@ export default function Settings() {
             style={styles.editIconButton}
             onPress={handleEdit}
           >
-            <Ionicons name="pencil" size={24} color="#3b82f6" />
+            <Ionicons name="create-outline" size={24} color="#3b82f6" />
           </TouchableOpacity>
         )}
       </View>
@@ -186,13 +186,13 @@ export default function Settings() {
                 source={{ uri: displayImage }}
                 style={styles.profileImage}
                 contentFit="cover"
-                cachePolicy="none" // Disable caching to always fetch fresh image
+                cachePolicy="memory" // Disable caching to always fetch fresh image
               />
             ) : null}
           </View>
           {isEditing && (
             <View style={styles.editPictureIconOverlay}>
-              <Ionicons name="pencil" size={20} color="#fff" />
+              <Ionicons name="create-outline" size={20} color="#fff" />
             </View>
           )}
         </TouchableOpacity>

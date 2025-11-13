@@ -42,16 +42,16 @@ const ContinueWorkout: React.FC = () => {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.push("/(tabs)/home")}
-          >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Loading...</Text>
-          <View style={styles.placeholder} />
-        </View>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Loading...</Text>
+        <View style={styles.placeholder} />
+      </View>
         <View style={[styles.content, styles.centerContent]}>
           <ActivityIndicator size="large" color="#3b82f6" />
         </View>
@@ -64,7 +64,7 @@ const ContinueWorkout: React.FC = () => {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.push("/(tabs)/home")}
+          onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -125,7 +125,7 @@ const ContinueWorkout: React.FC = () => {
 
         <TouchableOpacity
           style={styles.doneButton}
-          onPress={() => router.push("/(tabs)/home")}
+          onPress={() => router.push("/(tabs)/workout")}
         >
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>
