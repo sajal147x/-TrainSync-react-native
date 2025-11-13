@@ -26,7 +26,7 @@ const NewWorkout: React.FC = () => {
     setModalVisible(true);
     setLoading(true);
     setError(null);
-
+  
     try {
       const data = await getExercises();
       setExercises(data);
@@ -108,12 +108,12 @@ const NewWorkout: React.FC = () => {
       >
         <View style={styles.modalOverlay}>
           <TouchableOpacity
-            style={styles.modalOverlayTouchable}
+            style={styles.modalBackdrop}
             activeOpacity={1}
             onPress={() => setModalVisible(false)}
           />
           <View style={styles.modalContent}>
-            <SafeAreaView edges={["bottom"]} style={styles.modalSafeArea}>
+            <SafeAreaView edges={["top", "bottom"]} style={styles.modalSafeArea}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Select Exercise</Text>
                 <TouchableOpacity
@@ -142,7 +142,7 @@ const NewWorkout: React.FC = () => {
                 <FlatList
                   data={exercises}
                   renderItem={renderExerciseItem}
-                  keyExtractor={(item) => item.id}
+                  keyExtractor={(item) => item.id.toString()}
                   contentContainerStyle={styles.exercisesList}
                   style={styles.exercisesFlatList}
                   showsVerticalScrollIndicator={false}
@@ -222,22 +222,23 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "flex-end",
   },
-  modalOverlayTouchable: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: "rgba(13, 17, 23, 0.98)",
+    backgroundColor: "#0d1117",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: "85%",
+    height: "80%",
     width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
   },
   modalSafeArea: {
     flex: 1,
@@ -248,6 +249,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#111827",
