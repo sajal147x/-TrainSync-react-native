@@ -4,62 +4,23 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Modal,
-  FlatList,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { getExercises, ExerciseDto } from "../api/exercises";
+import { ExerciseDto } from "../api/exercises";
+import ExerciseSelectionModal from "../components/ExerciseSelectionModal";
 
 const NewWorkout: React.FC = () => {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
-  const [exercises, setExercises] = useState<ExerciseDto[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleAddExercise = async () => {
-    setModalVisible(true);
-    setLoading(true);
-    setError(null);
-  
-    try {
-      const data = await getExercises();
-      setExercises(data);
-    } catch (err: any) {
-      console.error("Error fetching exercises:", err);
-      setError(err.response?.data?.message || "Failed to fetch exercises");
-    } finally {
-      setLoading(false);
-    }
+  const handleSelectExercise = (exercise: ExerciseDto) => {
+    console.log("Selected exercise:", exercise);
+    // TODO: Add exercise to workout
   };
-
-  const renderExerciseItem = ({ item }: { item: ExerciseDto }) => (
-    <View style={styles.exerciseCard}>
-      <Text style={styles.exerciseName}>{item.name}</Text>
-      <View style={styles.tagsContainer}>
-        {item.muscleTags.map((tag, index) => {
-          // Vary rotation for more natural sticky note effect
-          const rotation = index % 3 === 0 ? "-1deg" : index % 3 === 1 ? "1deg" : "0deg";
-          return (
-            <View
-              key={index}
-              style={[
-                styles.tagStickyNote,
-                { transform: [{ rotate: rotation }] },
-              ]}
-            >
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,7 +39,7 @@ const NewWorkout: React.FC = () => {
         <TouchableOpacity
           style={styles.addExerciseButton}
           activeOpacity={0.8}
-          onPress={handleAddExercise}
+          onPress={() => setModalVisible(true)}
         >
           <BlurView intensity={80} tint="dark" style={styles.blurView}>
             <LinearGradient
@@ -100,58 +61,11 @@ const NewWorkout: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <Modal
+      <ExerciseSelectionModal
         visible={modalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={styles.modalBackdrop}
-            activeOpacity={1}
-            onPress={() => setModalVisible(false)}
-          />
-          <View style={styles.modalContent}>
-            <SafeAreaView edges={["top", "bottom"]} style={styles.modalSafeArea}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Exercise</Text>
-                <TouchableOpacity
-                  onPress={() => setModalVisible(false)}
-                  style={styles.closeButton}
-                >
-                  <Ionicons name="close" size={24} color="#fff" />
-                </TouchableOpacity>
-              </View>
-
-              {loading && (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#3b82f6" />
-                  <Text style={styles.loadingText}>Loading exercises...</Text>
-                </View>
-              )}
-
-              {error && (
-                <View style={styles.errorContainer}>
-                  <Ionicons name="alert-circle" size={24} color="#ef4444" />
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
-              )}
-
-              {!loading && !error && (
-                <FlatList
-                  data={exercises}
-                  renderItem={renderExerciseItem}
-                  keyExtractor={(item) => item.id.toString()}
-                  contentContainerStyle={styles.exercisesList}
-                  style={styles.exercisesFlatList}
-                  showsVerticalScrollIndicator={false}
-                />
-              )}
-            </SafeAreaView>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setModalVisible(false)}
+        onSelectExercise={handleSelectExercise}
+      />
     </SafeAreaView>
   );
 };
@@ -219,117 +133,6 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#0d1117",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    height: "80%",
-    width: "100%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  modalSafeArea: {
-    flex: 1,
-    maxHeight: "100%",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#111827",
-  },
-  modalTitle: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "700",
-  },
-  closeButton: {
-    padding: 8,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 16,
-    minHeight: 200,
-  },
-  loadingText: {
-    color: "#9ca3af",
-    fontSize: 16,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 24,
-    minHeight: 200,
-  },
-  errorText: {
-    color: "#ef4444",
-    fontSize: 16,
-    textAlign: "center",
-  },
-  exercisesList: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 32,
-  },
-  exercisesFlatList: {
-    flex: 1,
-  },
-  exerciseCard: {
-    backgroundColor: "rgba(31, 41, 55, 0.6)",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.2)",
-  },
-  exerciseName: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 12,
-  },
-  tagsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  tagStickyNote: {
-    backgroundColor: "#fef3c7",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#fde68a",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  tagText: {
-    color: "#78350f",
-    fontSize: 12,
-    fontWeight: "600",
   },
 });
 

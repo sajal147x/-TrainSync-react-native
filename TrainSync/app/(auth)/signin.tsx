@@ -27,8 +27,6 @@ export default function SignIn() {
        // after successful signup/signin
     await SecureStore.setItemAsync("jwt", response.data.access_token);
 
-
-      alert(`Login successful for ${email}`);
       router.replace("/(tabs)/home");
     } catch (error: any) {
       console.error(error);

@@ -51,3 +51,8 @@ export async function getExercises(
   return response.data.content;
 }
 
+export async function getMuscleTags(): Promise<string[]> {
+  const response = await client.get<string[]>("/exercises/muscle-tags");
+  return response.data;
+}
+

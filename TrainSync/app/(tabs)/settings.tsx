@@ -16,7 +16,8 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { getCurrentUser, UserDetails, updateUser } from "../api/user";
 import * as SecureStore from "expo-secure-store";
-import { useRouter } from "expo-router";  
+import { useRouter, useFocusEffect } from "expo-router";
+import { useCallback } from "react";  
 
 export default function Settings() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function Settings() {
   const [selectedImageBase64, setSelectedImageBase64] = useState<string | null>(null); // Base64 for upload
   const [uploading, setUploading] = useState(false);
 
+  // Fetch user data on mount
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -44,6 +46,23 @@ export default function Settings() {
     };
     fetchUser();
   }, []);
+
+  // Refetch user data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      const refetchUser = async () => {
+        try {
+          const data = await getCurrentUser();
+          setUser(data);
+          setName(data.name || "");
+          setAge(data.age?.toString() || "");
+        } catch (err) {
+          console.error("Error refetching user:", err);
+        }
+      };
+      refetchUser();
+    }, [])
+  );
 
   const handleEdit = () => setIsEditing(true);
 
@@ -85,12 +104,17 @@ export default function Settings() {
       
       // Call API to update user details (including profile picture if selected)
       const result = await updateUser(updatedUser, selectedImageBase64);
+      
+      console.log("User updated successfully:", result);
+      console.log("New profile picture URL:", result.profilePictureUrl);
 
       // Update local state
       setUser(result);
       setSelectedImage(null);
       setSelectedImageBase64(null);
       setIsEditing(false);
+      
+      Alert.alert("Success", "Profile updated successfully!");
     } catch (err) {
       console.error("Failed to update user:", err);
       Alert.alert("Error", "Failed to update user details.");
@@ -127,8 +151,12 @@ export default function Settings() {
     );
   }
 
-  // Determine which image to display
-  const displayImage = selectedImage || user?.profilePictureUrl || null;
+  // Determine which image to display with cache-busting query parameter
+  const displayImage = selectedImage 
+    ? selectedImage 
+    : user?.profilePictureUrl 
+      ? `${user.profilePictureUrl}?t=${Date.now()}` 
+      : null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -154,9 +182,11 @@ export default function Settings() {
           <View style={styles.profileCircle}>
             {displayImage ? (
               <Image
+                key={displayImage} // Force re-render when URL changes
                 source={{ uri: displayImage }}
                 style={styles.profileImage}
                 contentFit="cover"
+                cachePolicy="none" // Disable caching to always fetch fresh image
               />
             ) : null}
           </View>
