@@ -27,22 +27,28 @@ const ContinueWorkout: React.FC = () => {
 
   useEffect(() => {
     const fetchWorkout = async () => {
+      if (!workoutId) {
+        console.error("❌ No workoutId provided");
+        setLoading(false);
+        return;
+      }
+
       try {
+        console.log("🔵 Fetching workout with ID:", workoutId);
         const data = await getWorkout(workoutId);
-        console.log('Workout data received in component:', data);
-        console.log('Number of exercises:', data.exercises?.length || 0);
-        console.log('Exercise details:', data.exercises);
+        console.log('✅ Workout data received in component:', data);
+        console.log('📊 Number of exercises:', data.exercises?.length || 0);
+        console.log('📋 Exercise details:', data.exercises);
         setWorkout(data);
       } catch (error) {
-        console.error("Error fetching workout:", error);
+        console.error("❌ Error fetching workout:", error);
+        // Still set loading to false so UI doesn't get stuck
       } finally {
         setLoading(false);
       }
     };
 
-    if (workoutId) {
-      fetchWorkout();
-    }
+    fetchWorkout();
   }, [workoutId]);
 
   if (loading) {

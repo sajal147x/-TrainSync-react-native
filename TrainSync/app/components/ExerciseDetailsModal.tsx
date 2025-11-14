@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { ExerciseDto } from "../api/exercises";
-import { createNewWorkout, addExerciseToWorkout, getWorkout } from "../api/workout";
+import { createNewWorkout, addExerciseToWorkout } from "../api/workout";
 
 interface ExerciseDetailsModalProps {
   visible: boolean;
@@ -70,13 +70,6 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
         console.log("✅ Workout created successfully! ID:", resultWorkoutId);
       }
       
-      console.log("🔵 Fetching workout details...");
-      
-      // Fetch the full workout object
-      const workout = await getWorkout(resultWorkoutId);
-      
-      console.log("✅ Workout fetched successfully:", workout);
-      
       onAddToWorkout(exercise);
       onClose();
       
@@ -84,7 +77,7 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
       router.push({
         pathname: "/workout/continue",
         params: {
-          workoutId: workout.exerciseId, // Backend incorrectly names this field
+          workoutId: resultWorkoutId,
         }
       });
     } catch (error) {
