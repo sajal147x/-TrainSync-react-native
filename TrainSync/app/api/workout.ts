@@ -11,8 +11,17 @@ export interface AddExerciseToWorkoutRequest {
   exerciseId: string;
 }
 
+export interface SetDto {
+  id: string;
+  weight: number;
+  reps: number;
+  setNumber: number;
+}
+
 export interface ExerciseDto {
+  id: string;
   name: string;
+  sets: SetDto[];
 }
 
 export interface Workout {
@@ -47,5 +56,40 @@ export async function getWorkout(workoutId: string): Promise<Workout> {
     `/get-workout?workoutId=${workoutId}`
   );
   return response.data;
+}
+
+export interface AddSetToExerciseRequest {
+  exerciseId: string;
+  weight: string;
+  reps: string;
+  setNumber: number;
+}
+
+export interface UpdateSetInExerciseRequest {
+  setId: string;
+  weight: string;
+  reps: string;
+}
+
+export async function addSetToExercise(
+  request: AddSetToExerciseRequest
+): Promise<string> {
+  
+  const response = await client.post<string>(
+    "/add-set-to-exercise",
+    request
+  );
+  
+  console.log('addSetToExercise response:', response.data);
+  return response.data;
+}
+
+export async function updateSetInExercise(
+  request: UpdateSetInExerciseRequest
+): Promise<void> {
+  await client.post(
+    "/update-set-in-exercise",
+    request
+  );
 }
 

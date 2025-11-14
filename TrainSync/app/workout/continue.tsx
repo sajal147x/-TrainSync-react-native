@@ -23,12 +23,15 @@ const ContinueWorkout: React.FC = () => {
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<{ name: string; index: number } | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<{ name: string; exerciseId: string; index: number; sets: any[] } | null>(null);
 
   useEffect(() => {
     const fetchWorkout = async () => {
       try {
         const data = await getWorkout(workoutId);
+        console.log('Workout data received in component:', data);
+        console.log('Number of exercises:', data.exercises?.length || 0);
+        console.log('Exercise details:', data.exercises);
         setWorkout(data);
       } catch (error) {
         console.error("Error fetching workout:", error);
@@ -88,7 +91,12 @@ const ContinueWorkout: React.FC = () => {
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
                   <TouchableOpacity
                     onPress={() => {
-                      setSelectedExercise({ name: exercise.name, index });
+                      setSelectedExercise({ 
+                        name: exercise.name, 
+                        exerciseId: exercise.id, 
+                        index,
+                        sets: exercise.sets || []
+                      });
                       setEditModalVisible(true);
                     }}
                     style={styles.editButton}
@@ -149,6 +157,8 @@ const ContinueWorkout: React.FC = () => {
           setSelectedExercise(null);
         }}
         exerciseName={selectedExercise?.name || ""}
+        exerciseId={selectedExercise?.exerciseId || ""}
+        existingSets={selectedExercise?.sets || []}
       />
     </SafeAreaView>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,34 +9,65 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { addSetToExercise, updateSetInExercise, SetDto } from "../api/workout";
 
 interface Set {
   id: string;
+  setId?: string; // Backend set ID after saving
   weight: string;
   reps: string;
+  isSaved: boolean;
 }
 
 interface EditExerciseModalProps {
   visible: boolean;
   onClose: () => void;
   exerciseName: string;
+  exerciseId: string;
+  existingSets?: SetDto[];
 }
 
 const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
   visible,
   onClose,
   exerciseName,
+  exerciseId,
+  existingSets = [],
 }) => {
+  console.log('EditExerciseModal rendered with exerciseId:', exerciseId, 'exerciseName:', exerciseName);
+  
   const [sets, setSets] = useState<Set[]>([]);
+  const [savingSetId, setSavingSetId] = useState<string | null>(null);
+
+  // Pre-populate sets when modal opens with existing sets
+  useEffect(() => {
+    if (visible && existingSets.length > 0) {
+      // Sort sets by setNumber before transforming
+      const sortedSets = [...existingSets].sort((a, b) => a.setNumber - b.setNumber);
+      const transformedSets: Set[] = sortedSets.map((setDto) => ({
+        id: setDto.id,
+        setId: setDto.id, // Use the backend ID
+        weight: setDto.weight.toString(),
+        reps: setDto.reps.toString(),
+        isSaved: true, // Existing sets are already saved
+      }));
+      setSets(transformedSets);
+    } else if (visible && existingSets.length === 0) {
+      // Reset sets if no existing sets
+      setSets([]);
+    }
+  }, [visible, existingSets]);
 
   const addSet = () => {
     const newSet: Set = {
       id: Date.now().toString(),
       weight: "",
       reps: "",
+      isSaved: false,
     };
     setSets([...sets, newSet]);
   };
@@ -49,6 +80,68 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
 
   const removeSet = (id: string) => {
     setSets(sets.filter((set) => set.id !== id));
+  };
+
+  const saveSet = async (id: string) => {
+    const set = sets.find((s) => s.id === id);
+    if (!set || !set.weight || !set.reps) return;
+
+    setSavingSetId(id);
+    try {
+      if (set.setId) {
+        // Update existing set
+        console.log('Updating existing set with ID:', set.setId);
+        await updateSetInExercise({
+          setId: set.setId,
+          weight: set.weight,
+          reps: set.reps,
+        });
+      } else {
+        // Create new set
+        const setIndex = sets.findIndex((s) => s.id === id);
+        const setNumber = setIndex + 1;
+        
+        console.log('=== BEFORE addSetToExercise API call ===');
+        console.log('exerciseId prop:', exerciseId);
+        console.log('exerciseId type:', typeof exerciseId);
+        console.log('exerciseId is null/undefined?:', exerciseId == null);
+        const requestPayload = {
+          exerciseId,
+          weight: set.weight,
+          reps: set.reps,
+          setNumber,
+        };
+        console.log('Request payload:', JSON.stringify(requestPayload, null, 2));
+        console.log('=========================================');
+        
+        const setId = await addSetToExercise(requestPayload);
+        setSets(
+          sets.map((s) =>
+            s.id === id ? { ...s, setId, isSaved: true } : s
+          )
+        );
+      }
+      
+      // Mark as saved if updating
+      if (set.setId) {
+        setSets(
+          sets.map((s) =>
+            s.id === id ? { ...s, isSaved: true } : s
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Failed to save set:", error);
+      // TODO: Show error to user
+    } finally {
+      setSavingSetId(null);
+    }
+  };
+
+  const editSet = (id: string) => {
+    setSets(
+      sets.map((set) => (set.id === id ? { ...set, isSaved: false } : set))
+    );
   };
 
   return (
@@ -98,18 +191,43 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                     <View key={set.id} style={styles.setItem}>
                       <View style={styles.setHeader}>
                         <Text style={styles.setNumber}>Set {index + 1}</Text>
-                        <TouchableOpacity
-                          onPress={() => removeSet(set.id)}
-                          style={styles.removeButton}
-                        >
-                          <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                        </TouchableOpacity>
+                        <View style={styles.actionButtons}>
+                          {set.isSaved ? (
+                            <TouchableOpacity
+                              onPress={() => editSet(set.id)}
+                              style={styles.editButton}
+                            >
+                              <Ionicons name="pencil-outline" size={20} color="#3b82f6" />
+                            </TouchableOpacity>
+                          ) : (
+                            <TouchableOpacity
+                              onPress={() => saveSet(set.id)}
+                              style={styles.saveButton}
+                              disabled={savingSetId === set.id}
+                            >
+                              {savingSetId === set.id ? (
+                                <ActivityIndicator size="small" color="#10b981" />
+                              ) : (
+                                <Ionicons name="checkmark-circle-outline" size={20} color="#10b981" />
+                              )}
+                            </TouchableOpacity>
+                          )}
+                          <TouchableOpacity
+                            onPress={() => removeSet(set.id)}
+                            style={styles.removeButton}
+                          >
+                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                          </TouchableOpacity>
+                        </View>
                       </View>
                       <View style={styles.inputRow}>
                         <View style={styles.inputContainer}>
                           <Text style={styles.inputLabel}>Weight (lbs)</Text>
                           <TextInput
-                            style={styles.input}
+                            style={[
+                              styles.input,
+                              set.isSaved && styles.inputReadOnly,
+                            ]}
                             value={set.weight}
                             onChangeText={(value) =>
                               updateSet(set.id, "weight", value)
@@ -117,12 +235,16 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                             placeholder="0"
                             placeholderTextColor="#6b7280"
                             keyboardType="numeric"
+                            editable={!set.isSaved}
                           />
                         </View>
                         <View style={styles.inputContainer}>
                           <Text style={styles.inputLabel}>Reps</Text>
                           <TextInput
-                            style={styles.input}
+                            style={[
+                              styles.input,
+                              set.isSaved && styles.inputReadOnly,
+                            ]}
                             value={set.reps}
                             onChangeText={(value) =>
                               updateSet(set.id, "reps", value)
@@ -130,6 +252,7 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                             placeholder="0"
                             placeholderTextColor="#6b7280"
                             keyboardType="numeric"
+                            editable={!set.isSaved}
                           />
                         </View>
                       </View>
@@ -247,6 +370,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
+  actionButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  saveButton: {
+    padding: 4,
+  },
+  editButton: {
+    padding: 4,
+  },
   removeButton: {
     padding: 4,
   },
@@ -272,6 +406,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.3)",
+  },
+  inputReadOnly: {
+    backgroundColor: "rgba(17, 24, 39, 0.3)",
+    borderColor: "rgba(59, 130, 246, 0.15)",
+    opacity: 0.8,
   },
   addSetButton: {
     backgroundColor: "rgba(59, 130, 246, 0.2)",
