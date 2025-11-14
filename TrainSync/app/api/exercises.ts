@@ -1,9 +1,14 @@
 import client from "./client";
 
+export interface MuscleTagDto {
+  name: string;
+  level: string;
+}
+
 export interface ExerciseDto {
   id: string;
   name: string;
-  muscleTags: string[];
+  muscleTags: MuscleTagDto[];
 }
 
 export interface GetExercisesParams {

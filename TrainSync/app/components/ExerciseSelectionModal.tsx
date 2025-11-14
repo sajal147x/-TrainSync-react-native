@@ -108,15 +108,27 @@ const ExerciseSelectionModal: React.FC<ExerciseSelectionModalProps> = ({
           // Vary rotation for more natural sticky note effect
           const rotation =
             index % 3 === 0 ? "-1deg" : index % 3 === 1 ? "1deg" : "0deg";
+          const isPrimary = tag.level === "PRIMARY";
+          const isSecondary = tag.level === "SECONDARY";
           return (
             <View
               key={index}
               style={[
                 styles.tagStickyNote,
+                isPrimary && styles.tagStickyNotePrimary,
+                isSecondary && styles.tagStickyNoteSecondary,
                 { transform: [{ rotate: rotation }] },
               ]}
             >
-              <Text style={styles.tagText}>{tag}</Text>
+              <Text
+                style={[
+                  styles.tagText,
+                  isPrimary && styles.tagTextPrimary,
+                  isSecondary && styles.tagTextSecondary,
+                ]}
+              >
+                {tag.name}
+              </Text>
             </View>
           );
         })}
@@ -538,10 +550,24 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
+  tagStickyNotePrimary: {
+    backgroundColor: "#dcfce7",
+    borderColor: "#86efac",
+  },
+  tagStickyNoteSecondary: {
+    backgroundColor: "#fef3c7",
+    borderColor: "#fde68a",
+  },
   tagText: {
     color: "#78350f",
     fontSize: 12,
     fontWeight: "600",
+  },
+  tagTextPrimary: {
+    color: "#166534",
+  },
+  tagTextSecondary: {
+    color: "#78350f",
   },
 });
 
