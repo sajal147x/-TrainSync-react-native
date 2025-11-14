@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { getWorkout, Workout } from "../api/workout";
+import EditExerciseModal from "../components/EditExerciseModal";
 
 const ContinueWorkout: React.FC = () => {
   const router = useRouter();
@@ -21,6 +22,8 @@ const ContinueWorkout: React.FC = () => {
   const workoutId = params.workoutId as string;
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState<{ name: string; index: number } | null>(null);
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -83,7 +86,15 @@ const ContinueWorkout: React.FC = () => {
                     <Text style={styles.exerciseNumberText}>{index + 1}</Text>
                   </View>
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
-                  <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedExercise({ name: exercise.name, index });
+                      setEditModalVisible(true);
+                    }}
+                    style={styles.editButton}
+                  >
+                    <Ionicons name="create-outline" size={20} color="#3b82f6" />
+                  </TouchableOpacity>
                 </View>
               ))
             ) : (
@@ -130,6 +141,15 @@ const ContinueWorkout: React.FC = () => {
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>
       </View>
+
+      <EditExerciseModal
+        visible={editModalVisible}
+        onClose={() => {
+          setEditModalVisible(false);
+          setSelectedExercise(null);
+        }}
+        exerciseName={selectedExercise?.name || ""}
+      />
     </SafeAreaView>
   );
 };
@@ -211,6 +231,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     flex: 1,
+  },
+  editButton: {
+    padding: 4,
+    marginRight: 8,
   },
   emptyState: {
     padding: 32,
