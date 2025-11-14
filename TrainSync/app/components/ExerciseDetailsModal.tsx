@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Modal,
   Alert,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -36,6 +37,19 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
 }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
+  const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
+
+  // Debug: Log exercise data to see if equipmentTags is present
+  useEffect(() => {
+    if (exercise) {
+      console.log("🔍 Exercise data:", {
+        name: exercise.name,
+        equipmentTags: exercise.equipmentTags,
+        equipmentTagsLength: exercise.equipmentTags?.length,
+      });
+    }
+  }, [exercise]);
 
   if (!exercise) return null;
 
@@ -144,6 +158,70 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
                     );
                   })}
                 </View>
+              </View>
+
+              <View style={styles.equipmentSection}>
+                <Text style={styles.sectionLabel}>Equipment</Text>
+                {exercise.equipmentTags && exercise.equipmentTags.length > 0 ? (
+                  <>
+                    <TouchableOpacity
+                      style={styles.dropdownButton}
+                      onPress={() => setIsEquipmentDropdownOpen(!isEquipmentDropdownOpen)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.dropdownButtonText}>
+                        {selectedEquipment
+                          ? exercise.equipmentTags.find((eq) => eq.id === selectedEquipment)?.name || "Select Equipment"
+                          : "Select Equipment"}
+                      </Text>
+                      <Ionicons
+                        name={isEquipmentDropdownOpen ? "chevron-up" : "chevron-down"}
+                        size={20}
+                        color="#9ca3af"
+                      />
+                    </TouchableOpacity>
+
+                    {isEquipmentDropdownOpen && (
+                      <View style={styles.dropdownContainer}>
+                        <ScrollView
+                          style={styles.dropdownScrollView}
+                          nestedScrollEnabled={true}
+                        >
+                          {exercise.equipmentTags.map((equipment) => (
+                            <TouchableOpacity
+                              key={equipment.id}
+                              style={[
+                                styles.dropdownItem,
+                                selectedEquipment === equipment.id && styles.dropdownItemSelected,
+                              ]}
+                              onPress={() => {
+                                setSelectedEquipment(equipment.id);
+                                setIsEquipmentDropdownOpen(false);
+                              }}
+                              activeOpacity={0.7}
+                            >
+                              <Text
+                                style={[
+                                  styles.dropdownItemText,
+                                  selectedEquipment === equipment.id && styles.dropdownItemTextSelected,
+                                ]}
+                              >
+                                {equipment.name}
+                              </Text>
+                              {selectedEquipment === equipment.id && (
+                                <Ionicons name="checkmark" size={20} color="#3b82f6" />
+                              )}
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <View style={styles.noEquipmentContainer}>
+                    <Text style={styles.noEquipmentText}>No equipment available for this exercise</Text>
+                  </View>
+                )}
               </View>
 
               <TouchableOpacity
@@ -283,6 +361,77 @@ const styles = StyleSheet.create({
   },
   tagTextSecondary: {
     color: "#78350f",
+  },
+  equipmentSection: {
+    marginBottom: 32,
+  },
+  noEquipmentContainer: {
+    backgroundColor: "#1f2937",
+    borderWidth: 1,
+    borderColor: "#374151",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 50,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noEquipmentText: {
+    color: "#9ca3af",
+    fontSize: 14,
+    fontStyle: "italic",
+  },
+  dropdownButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#1f2937",
+    borderWidth: 1,
+    borderColor: "#374151",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 50,
+  },
+  dropdownButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+    flex: 1,
+  },
+  dropdownContainer: {
+    marginTop: 8,
+    backgroundColor: "#1f2937",
+    borderWidth: 1,
+    borderColor: "#374151",
+    borderRadius: 12,
+    maxHeight: 200,
+    overflow: "hidden",
+  },
+  dropdownScrollView: {
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#374151",
+  },
+  dropdownItemSelected: {
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
+  },
+  dropdownItemText: {
+    color: "#e5e7eb",
+    fontSize: 16,
+    fontWeight: "500",
+    flex: 1,
+  },
+  dropdownItemTextSelected: {
+    color: "#3b82f6",
+    fontWeight: "600",
   },
   addButton: {
     borderRadius: 12,

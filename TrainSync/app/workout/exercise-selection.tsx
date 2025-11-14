@@ -31,6 +31,7 @@ const ExerciseSelection: React.FC = () => {
   const [selectedExercise, setSelectedExercise] = useState<ExerciseDto | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     fetchExercises();
@@ -38,6 +39,12 @@ const ExerciseSelection: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Skip debounced fetch on initial mount (already fetched above)
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
     // Debounce search - only search if 3+ characters or empty (to show all)
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
