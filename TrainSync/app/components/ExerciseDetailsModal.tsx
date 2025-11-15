@@ -40,8 +40,6 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentTagDto | null>(null);
   const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
 
-  if (!exercise) return null;
-
   // Initialize selected equipment when exercise changes
   useEffect(() => {
     if (exercise && exercise.equipmentTags && exercise.equipmentTags.length > 0) {
@@ -60,6 +58,8 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
       setIsEquipmentDropdownOpen(false);
     }
   }, [visible]);
+
+  if (!exercise) return null;
 
   const handleAddToWorkout = async () => {
     try {

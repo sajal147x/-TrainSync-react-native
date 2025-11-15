@@ -20,6 +20,7 @@ export interface ExerciseDto {
 export interface GetExercisesParams {
   searchText?: string;
   muscleTag?: string;
+  equipmentTag?: string;
   page?: number;
   size?: number;
 }
