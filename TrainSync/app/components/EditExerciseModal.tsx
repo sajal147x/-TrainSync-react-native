@@ -208,7 +208,7 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                               {savingSetId === set.id ? (
                                 <ActivityIndicator size="small" color="#10b981" />
                               ) : (
-                                <Ionicons name="checkmark-circle-outline" size={20} color="#10b981" />
+                                <Ionicons name="save-outline" size={20} color="#10b981" />
                               )}
                             </TouchableOpacity>
                           )}
@@ -270,6 +270,13 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                 >
                   <Ionicons name="add-circle-outline" size={24} color="#fff" />
                   <Text style={styles.addSetButtonText}>Add Set</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.doneButton}
+                  onPress={onClose}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.doneButtonText}>Done</Text>
                 </TouchableOpacity>
               </View>
             </SafeAreaView>
@@ -335,6 +342,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 24,
     paddingBottom: 16,
+    gap: 12,
   },
   emptyState: {
     alignItems: "center",
@@ -425,6 +433,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addSetButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  doneButton: {
+    backgroundColor: "#3b82f6",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  doneButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",

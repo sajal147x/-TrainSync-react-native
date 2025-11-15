@@ -213,7 +213,7 @@ const ExerciseSelection: React.FC = () => {
           activeOpacity={0.7}
         >
           <Ionicons
-            name="barbell"
+            name="fitness"
             size={20}
             color="#9ca3af"
             style={styles.dropdownIcon}
@@ -301,7 +301,7 @@ const ExerciseSelection: React.FC = () => {
           activeOpacity={0.7}
         >
           <Ionicons
-            name="fitness"
+            name="barbell"
             size={20}
             color="#9ca3af"
             style={styles.dropdownIcon}
