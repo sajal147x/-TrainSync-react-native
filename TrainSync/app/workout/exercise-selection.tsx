@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getExercises, ExerciseDto, getMuscleTags } from "../api/exercises";
+import { getExercises, ExerciseDto, getMuscleTags, getEquipmentTags, EquipmentTagDto } from "../api/exercises";
 import ExerciseDetailsModal from "../components/ExerciseDetailsModal";
 
 const ExerciseSelection: React.FC = () => {
@@ -28,6 +28,9 @@ const ExerciseSelection: React.FC = () => {
   const [muscleTags, setMuscleTags] = useState<string[]>([]);
   const [selectedMuscleTag, setSelectedMuscleTag] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [equipmentTags, setEquipmentTags] = useState<EquipmentTagDto[]>([]);
+  const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
+  const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<ExerciseDto | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -36,6 +39,7 @@ const ExerciseSelection: React.FC = () => {
   useEffect(() => {
     fetchExercises();
     fetchMuscleTags();
+    fetchEquipmentTags();
   }, []);
 
   useEffect(() => {
@@ -52,7 +56,7 @@ const ExerciseSelection: React.FC = () => {
 
     debounceTimeout.current = setTimeout(() => {
       if (searchText.length >= 3 || searchText.length === 0) {
-        fetchExercises(searchText, selectedMuscleTag);
+        fetchExercises(searchText, selectedMuscleTag, selectedEquipment);
       }
     }, 500); // 500ms debounce
 
@@ -61,9 +65,9 @@ const ExerciseSelection: React.FC = () => {
         clearTimeout(debounceTimeout.current);
       }
     };
-  }, [searchText, selectedMuscleTag]);
+  }, [searchText, selectedMuscleTag, selectedEquipment]);
 
-  const fetchExercises = async (search?: string, muscleTag?: string | null) => {
+  const fetchExercises = async (search?: string, muscleTag?: string | null, equipmentId?: string | null) => {
     setLoading(true);
     setError(null);
 
@@ -74,6 +78,9 @@ const ExerciseSelection: React.FC = () => {
       }
       if (muscleTag) {
         params.muscleTag = muscleTag;
+      }
+      if (equipmentId) {
+        params.equipmentTag = equipmentId;
       }
       const data = await getExercises(params);
       setExercises(data);
@@ -92,6 +99,16 @@ const ExerciseSelection: React.FC = () => {
     } catch (err: any) {
       console.error("Error fetching muscle tags:", err);
       // Silently fail for muscle tags, not critical
+    }
+  };
+
+  const fetchEquipmentTags = async () => {
+    try {
+      const tags = await getEquipmentTags();
+      setEquipmentTags(tags);
+    } catch (err: any) {
+      console.error("Error fetching equipment tags:", err);
+      // Silently fail for equipment tags, not critical
     }
   };
 
@@ -187,7 +204,12 @@ const ExerciseSelection: React.FC = () => {
       <View style={styles.dropdownContainer}>
         <TouchableOpacity
           style={styles.dropdownButton}
-          onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+          onPress={() => {
+            setIsDropdownOpen(!isDropdownOpen);
+            if (!isDropdownOpen) {
+              setIsEquipmentDropdownOpen(false);
+            }
+          }}
           activeOpacity={0.7}
         >
           <Ionicons
@@ -267,6 +289,96 @@ const ExerciseSelection: React.FC = () => {
         )}
       </View>
 
+      <View style={styles.dropdownContainer}>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => {
+            setIsEquipmentDropdownOpen(!isEquipmentDropdownOpen);
+            if (!isEquipmentDropdownOpen) {
+              setIsDropdownOpen(false);
+            }
+          }}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name="fitness"
+            size={20}
+            color="#9ca3af"
+            style={styles.dropdownIcon}
+          />
+          <Text style={styles.dropdownButtonText}>
+            {selectedEquipment
+              ? equipmentTags.find((eq) => eq.id === selectedEquipment)?.name || "All Equipment"
+              : "All Equipment"}
+          </Text>
+          <Ionicons
+            name={isEquipmentDropdownOpen ? "chevron-up" : "chevron-down"}
+            size={20}
+            color="#9ca3af"
+          />
+        </TouchableOpacity>
+
+        {isEquipmentDropdownOpen && (
+          <View style={styles.dropdownList}>
+            <ScrollView
+              style={styles.dropdownScrollView}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.dropdownItem,
+                  !selectedEquipment && styles.dropdownItemSelected,
+                ]}
+                onPress={() => {
+                  setSelectedEquipment(null);
+                  setIsEquipmentDropdownOpen(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.dropdownItemText,
+                    !selectedEquipment && styles.dropdownItemTextSelected,
+                  ]}
+                >
+                  All Equipment
+                </Text>
+                {!selectedEquipment && (
+                  <Ionicons name="checkmark" size={20} color="#3b82f6" />
+                )}
+              </TouchableOpacity>
+
+              {equipmentTags.map((tag) => (
+                <TouchableOpacity
+                  key={tag.id}
+                  style={[
+                    styles.dropdownItem,
+                    selectedEquipment === tag.id && styles.dropdownItemSelected,
+                  ]}
+                  onPress={() => {
+                    setSelectedEquipment(tag.id);
+                    setIsEquipmentDropdownOpen(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      selectedEquipment === tag.id &&
+                        styles.dropdownItemTextSelected,
+                    ]}
+                  >
+                    {tag.name}
+                  </Text>
+                  {selectedEquipment === tag.id && (
+                    <Ionicons name="checkmark" size={20} color="#3b82f6" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+      </View>
+
       {searchText.length > 0 && searchText.length < 3 && (
         <View style={styles.searchHintContainer}>
           <Text style={styles.searchHintText}>
@@ -286,12 +398,12 @@ const ExerciseSelection: React.FC = () => {
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={24} color="#ef4444" />
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={() => fetchExercises(searchText, selectedMuscleTag)}
-          >
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => fetchExercises(searchText, selectedMuscleTag, selectedEquipment)}
+            >
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
         </View>
       )}
 

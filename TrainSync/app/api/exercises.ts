@@ -93,3 +93,8 @@ export async function getMuscleTags(): Promise<string[]> {
   return response.data;
 }
 
+export async function getEquipmentTags(): Promise<EquipmentTagDto[]> {
+  const response = await client.get<EquipmentTagDto[]>("/exercises/equipmenttags");
+  return response.data;
+}
+

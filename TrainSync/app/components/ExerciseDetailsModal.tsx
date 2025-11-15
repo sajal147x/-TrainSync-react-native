@@ -13,7 +13,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { ExerciseDto } from "../api/exercises";
+import { ExerciseDto, EquipmentTagDto } from "../api/exercises";
 import { createNewWorkout, addExerciseToWorkout } from "../api/workout";
 
 interface ExerciseDetailsModalProps {
@@ -37,21 +37,29 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
 }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
+  const [selectedEquipment, setSelectedEquipment] = useState<EquipmentTagDto | null>(null);
   const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
 
-  // Debug: Log exercise data to see if equipmentTags is present
+  if (!exercise) return null;
+
+  // Initialize selected equipment when exercise changes
   useEffect(() => {
-    if (exercise) {
-      console.log("🔍 Exercise data:", {
-        name: exercise.name,
-        equipmentTags: exercise.equipmentTags,
-        equipmentTagsLength: exercise.equipmentTags?.length,
-      });
+    if (exercise && exercise.equipmentTags && exercise.equipmentTags.length > 0) {
+      // Auto-select first equipment if available
+      setSelectedEquipment(exercise.equipmentTags[0]);
+    } else {
+      setSelectedEquipment(null);
     }
+    // Close dropdown when exercise changes
+    setIsEquipmentDropdownOpen(false);
   }, [exercise]);
 
-  if (!exercise) return null;
+  // Close dropdown when modal closes
+  useEffect(() => {
+    if (!visible) {
+      setIsEquipmentDropdownOpen(false);
+    }
+  }, [visible]);
 
   const handleAddToWorkout = async () => {
     try {
@@ -163,16 +171,20 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
               <View style={styles.equipmentSection}>
                 <Text style={styles.sectionLabel}>Equipment</Text>
                 {exercise.equipmentTags && exercise.equipmentTags.length > 0 ? (
-                  <>
+                  <View style={styles.dropdownContainer}>
                     <TouchableOpacity
                       style={styles.dropdownButton}
                       onPress={() => setIsEquipmentDropdownOpen(!isEquipmentDropdownOpen)}
                       activeOpacity={0.7}
                     >
+                      <Ionicons
+                        name="fitness"
+                        size={20}
+                        color="#9ca3af"
+                        style={styles.dropdownIcon}
+                      />
                       <Text style={styles.dropdownButtonText}>
-                        {selectedEquipment
-                          ? exercise.equipmentTags.find((eq) => eq.id === selectedEquipment)?.name || "Select Equipment"
-                          : "Select Equipment"}
+                        {selectedEquipment ? selectedEquipment.name : "Select Equipment"}
                       </Text>
                       <Ionicons
                         name={isEquipmentDropdownOpen ? "chevron-up" : "chevron-down"}
@@ -182,33 +194,34 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
                     </TouchableOpacity>
 
                     {isEquipmentDropdownOpen && (
-                      <View style={styles.dropdownContainer}>
+                      <View style={styles.dropdownList}>
                         <ScrollView
                           style={styles.dropdownScrollView}
+                          showsVerticalScrollIndicator={true}
                           nestedScrollEnabled={true}
                         >
-                          {exercise.equipmentTags.map((equipment) => (
+                          {exercise.equipmentTags.map((tag) => (
                             <TouchableOpacity
-                              key={equipment.id}
+                              key={tag.id}
                               style={[
                                 styles.dropdownItem,
-                                selectedEquipment === equipment.id && styles.dropdownItemSelected,
+                                selectedEquipment?.id === tag.id && styles.dropdownItemSelected,
                               ]}
                               onPress={() => {
-                                setSelectedEquipment(equipment.id);
+                                setSelectedEquipment(tag);
                                 setIsEquipmentDropdownOpen(false);
                               }}
-                              activeOpacity={0.7}
                             >
                               <Text
                                 style={[
                                   styles.dropdownItemText,
-                                  selectedEquipment === equipment.id && styles.dropdownItemTextSelected,
+                                  selectedEquipment?.id === tag.id &&
+                                    styles.dropdownItemTextSelected,
                                 ]}
                               >
-                                {equipment.name}
+                                {tag.name}
                               </Text>
-                              {selectedEquipment === equipment.id && (
+                              {selectedEquipment?.id === tag.id && (
                                 <Ionicons name="checkmark" size={20} color="#3b82f6" />
                               )}
                             </TouchableOpacity>
@@ -216,10 +229,10 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
                         </ScrollView>
                       </View>
                     )}
-                  </>
+                  </View>
                 ) : (
                   <View style={styles.noEquipmentContainer}>
-                    <Text style={styles.noEquipmentText}>No equipment available for this exercise</Text>
+                    <Text style={styles.noEquipmentText}>No equipment required</Text>
                   </View>
                 )}
               </View>
@@ -365,6 +378,61 @@ const styles = StyleSheet.create({
   equipmentSection: {
     marginBottom: 32,
   },
+  dropdownContainer: {
+    position: "relative",
+    zIndex: 10,
+  },
+  dropdownButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(31, 41, 55, 0.6)",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.2)",
+  },
+  dropdownIcon: {
+    marginRight: 8,
+  },
+  dropdownButtonText: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 16,
+  },
+  dropdownList: {
+    marginTop: 8,
+    backgroundColor: "rgba(31, 41, 55, 0.95)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+    maxHeight: 200,
+    overflow: "hidden",
+  },
+  dropdownScrollView: {
+    flexGrow: 0,
+  },
+  dropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(59, 130, 246, 0.1)",
+  },
+  dropdownItemSelected: {
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
+  },
+  dropdownItemText: {
+    color: "#fff",
+    fontSize: 16,
+    flex: 1,
+  },
+  dropdownItemTextSelected: {
+    color: "#3b82f6",
+    fontWeight: "600",
+  },
   noEquipmentContainer: {
     backgroundColor: "#1f2937",
     borderWidth: 1,
@@ -380,58 +448,6 @@ const styles = StyleSheet.create({
     color: "#9ca3af",
     fontSize: 14,
     fontStyle: "italic",
-  },
-  dropdownButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#1f2937",
-    borderWidth: 1,
-    borderColor: "#374151",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    minHeight: 50,
-  },
-  dropdownButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "500",
-    flex: 1,
-  },
-  dropdownContainer: {
-    marginTop: 8,
-    backgroundColor: "#1f2937",
-    borderWidth: 1,
-    borderColor: "#374151",
-    borderRadius: 12,
-    maxHeight: 200,
-    overflow: "hidden",
-  },
-  dropdownScrollView: {
-    maxHeight: 200,
-  },
-  dropdownItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#374151",
-  },
-  dropdownItemSelected: {
-    backgroundColor: "rgba(59, 130, 246, 0.1)",
-  },
-  dropdownItemText: {
-    color: "#e5e7eb",
-    fontSize: 16,
-    fontWeight: "500",
-    flex: 1,
-  },
-  dropdownItemTextSelected: {
-    color: "#3b82f6",
-    fontWeight: "600",
   },
   addButton: {
     borderRadius: 12,
