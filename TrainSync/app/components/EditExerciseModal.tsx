@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
+import * as Haptics from "expo-haptics";
 import { addSetToExercise, updateSetInExercise, deleteSet, SetDto } from "../api/workout";
 
 interface Set {
@@ -188,16 +189,39 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
     );
   };
 
+  const renderLeftActions = (id: string, set: Set) => {
+    if (!set.isSaved) return null;
+    
+    return (
+      <View style={styles.leftActionContainer}>
+        <TouchableOpacity
+          style={styles.editActionButton}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            editSet(id);
+          }}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="pencil" size={22} color="#fff" />
+          <Text style={styles.actionText}>Edit</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   const renderRightActions = (id: string) => {
     return (
       <View style={styles.rightActionContainer}>
         <TouchableOpacity
           style={styles.deleteActionButton}
-          onPress={() => removeSet(id)}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            removeSet(id);
+          }}
           activeOpacity={0.8}
         >
-          <Ionicons name="trash" size={24} color="#fff" />
-          <Text style={styles.deleteActionText}>Delete</Text>
+          <Ionicons name="trash" size={22} color="#fff" />
+          <Text style={styles.actionText}>Delete</Text>
         </TouchableOpacity>
       </View>
     );
@@ -253,9 +277,16 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                         ref={(ref) => {
                           swipeableRefs.current[set.id] = ref;
                         }}
+                        renderLeftActions={() => renderLeftActions(set.id, set)}
                         renderRightActions={() => renderRightActions(set.id)}
+                        overshootLeft={false}
                         overshootRight={false}
-                        friction={2}
+                        friction={1.5}
+                        leftThreshold={40}
+                        rightThreshold={40}
+                        onSwipeableWillOpen={(direction) => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        }}
                       >
                         <View style={styles.setItem}>
                           <View style={styles.setHeader}>
@@ -521,25 +552,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  leftActionContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "flex-start",
+    marginBottom: 12,
+    paddingLeft: 4,
+  },
   rightActionContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "flex-end",
     marginBottom: 12,
+    paddingRight: 4,
+  },
+  editActionButton: {
+    backgroundColor: "#3b82f6",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 90,
+    height: "100%",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    gap: 4,
   },
   deleteActionButton: {
     backgroundColor: "#ef4444",
     justifyContent: "center",
     alignItems: "center",
-    width: 100,
+    width: 90,
     height: "100%",
     borderRadius: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     gap: 4,
   },
-  deleteActionText: {
+  actionText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
   },
 });
