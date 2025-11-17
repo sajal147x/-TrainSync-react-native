@@ -93,3 +93,22 @@ export async function updateSetInExercise(
   );
 }
 
+export interface SetDtoForDelete {
+  id: string;
+  setNumber: number;
+}
+
+export interface DeleteSetRequest {
+  deletedSetId: string;
+  newSets: SetDtoForDelete[];
+}
+
+export async function deleteSet(
+  request: DeleteSetRequest
+): Promise<void> {
+  await client.post(
+    "/delete-set",
+    request
+  );
+}
+
