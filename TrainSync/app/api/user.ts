@@ -6,6 +6,7 @@ export interface UserDetails {
   email: string;
   age: number | null;
   profilePictureUrl?: string | null;
+  userType: string;
 }
 
 export interface UserUpdateRequest {
