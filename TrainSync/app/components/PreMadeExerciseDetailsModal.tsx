@@ -6,12 +6,16 @@ import {
   StyleSheet,
   Modal,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { ExerciseDto, EquipmentTagDto } from "../api/exercises";
+import { createPreMadeRoutine } from "../api/PreMadeWorkout";
 
 interface PreMadeExerciseDetailsModalProps {
   visible: boolean;
@@ -26,8 +30,10 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
   onClose,
   workoutName,
 }) => {
+  const router = useRouter();
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentTagDto | null>(null);
   const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Initialize selected equipment when exercise changes
   useEffect(() => {
@@ -50,10 +56,37 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
 
   if (!exercise) return null;
 
-  const handleAddToWorkout = () => {
-    // Placeholder - doesn't need to do anything as of now
-    console.log("Add exercise to workout:", workoutName, exercise.name);
-    onClose();
+  const handleAddToWorkout = async () => {
+    // Check if equipment is selected (required if exercise has equipment tags)
+    if (exercise.equipmentTags && exercise.equipmentTags.length > 0 && !selectedEquipment) {
+      Alert.alert("Equipment Required", "Please select an equipment option before adding the exercise.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const preMadeWorkoutId = await createPreMadeRoutine({
+        name: workoutName,
+        exerciseId: exercise.id,
+        equipmentId: selectedEquipment?.id || "",
+      });
+      
+      onClose();
+      router.push({
+        pathname: "/PreMadeWorkouts/continue",
+        params: {
+          preMadeWorkoutId,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error creating pre-made routine:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to create pre-made routine. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -184,9 +217,10 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
               </View>
 
               <TouchableOpacity
-                style={styles.addButton}
+                style={[styles.addButton, isLoading && styles.addButtonDisabled]}
                 onPress={handleAddToWorkout}
                 activeOpacity={0.8}
+                disabled={isLoading}
               >
                 <BlurView intensity={80} tint="dark" style={styles.blurView}>
                   <LinearGradient
@@ -200,8 +234,14 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
                     style={styles.gradientOverlay}
                   >
                     <View style={styles.buttonInner}>
-                      <Ionicons name="add-circle" size={24} color="#fff" />
-                      <Text style={styles.addButtonText}>Add exercise to {workoutName}</Text>
+                      {isLoading ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Ionicons name="add-circle" size={24} color="#fff" />
+                      )}
+                      <Text style={styles.addButtonText}>
+                        {isLoading ? "Creating..." : `Add exercise to ${workoutName}`}
+                      </Text>
                     </View>
                   </LinearGradient>
                 </BlurView>
@@ -398,6 +438,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  addButtonDisabled: {
+    opacity: 0.6,
   },
   blurView: {
     borderRadius: 12,
