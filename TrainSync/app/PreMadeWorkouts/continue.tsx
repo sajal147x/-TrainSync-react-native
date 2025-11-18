@@ -8,9 +8,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { useCallback } from "react";
 import { getPreMadeWorkout, PreMadeWorkout } from "../api/PreMadeWorkout";
+import EditExercisePreMadeWorkoutModal from "../components/EditExercisePreMadeWorkoutModal";
 
 const ContinuePreMadeWorkout: React.FC = () => {
   const router = useRouter();
@@ -19,31 +23,44 @@ const ContinuePreMadeWorkout: React.FC = () => {
   const [workout, setWorkout] = useState<PreMadeWorkout | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingExercise, setEditingExercise] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const fetchWorkout = useCallback(async () => {
+    if (!preMadeWorkoutId) {
+      console.error("No preMadeWorkoutId provided");
+      setError("No workout ID provided");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getPreMadeWorkout(preMadeWorkoutId);
+      setWorkout(data);
+    } catch (err: any) {
+      console.error("Error fetching pre-made workout:", err);
+      setError(err.response?.data?.message || "Failed to load workout");
+    } finally {
+      setLoading(false);
+    }
+  }, [preMadeWorkoutId]);
 
   useEffect(() => {
-    const fetchWorkout = async () => {
-      if (!preMadeWorkoutId) {
-        console.error("No preMadeWorkoutId provided");
-        setError("No workout ID provided");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getPreMadeWorkout(preMadeWorkoutId);
-        setWorkout(data);
-      } catch (err: any) {
-        console.error("Error fetching pre-made workout:", err);
-        setError(err.response?.data?.message || "Failed to load workout");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchWorkout();
-  }, [preMadeWorkoutId]);
+  }, [fetchWorkout]);
+
+  // Refetch workout data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (preMadeWorkoutId) {
+        fetchWorkout();
+      }
+    }, [preMadeWorkoutId, fetchWorkout])
+  );
 
   if (loading) {
     return (
@@ -84,21 +101,7 @@ const ContinuePreMadeWorkout: React.FC = () => {
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity
             style={styles.retryButton}
-            onPress={() => {
-              setLoading(true);
-              setError(null);
-              const fetchWorkout = async () => {
-                try {
-                  const data = await getPreMadeWorkout(preMadeWorkoutId);
-                  setWorkout(data);
-                } catch (err: any) {
-                  setError(err.response?.data?.message || "Failed to load workout");
-                } finally {
-                  setLoading(false);
-                }
-              };
-              fetchWorkout();
-            }}
+            onPress={fetchWorkout}
           >
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
@@ -131,6 +134,13 @@ const ContinuePreMadeWorkout: React.FC = () => {
                     <Text style={styles.exerciseNumberText}>{index + 1}</Text>
                   </View>
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => setEditingExercise({ id: exercise.id, name: exercise.name })}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="create-outline" size={20} color="#3b82f6" />
+                  </TouchableOpacity>
                 </View>
               ))
             ) : (
@@ -142,12 +152,50 @@ const ContinuePreMadeWorkout: React.FC = () => {
         </View>
 
         <TouchableOpacity
+          style={styles.addExerciseButton}
+          activeOpacity={0.8}
+          onPress={() => router.push({
+            pathname: "/PreMadeWorkouts/exercise-selection",
+            params: {
+              workoutName: workout?.name || "",
+              preMadeWorkoutId,
+            }
+          })}
+        >
+          <BlurView intensity={80} tint="dark" style={styles.blurView}>
+            <LinearGradient
+              colors={[
+                "rgba(59, 130, 246, 0.2)",
+                "rgba(59, 130, 246, 0.1)",
+                "rgba(59, 130, 246, 0.2)",
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.gradientOverlay}
+            >
+              <View style={styles.buttonInner}>
+                <Ionicons name="add-circle-outline" size={24} color="#fff" />
+                <Text style={styles.addExerciseButtonText}>Add Another Exercise</Text>
+              </View>
+            </LinearGradient>
+          </BlurView>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.doneButton}
           onPress={() => router.back()}
         >
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>
       </View>
+
+      <EditExercisePreMadeWorkoutModal
+        visible={editingExercise !== null}
+        onClose={() => setEditingExercise(null)}
+        exerciseName={editingExercise?.name || ""}
+        exerciseId={editingExercise?.id || ""}
+        existingSets={[]}
+      />
     </SafeAreaView>
   );
 };
@@ -253,6 +301,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     flex: 1,
   },
+  editButton: {
+    padding: 8,
+  },
   emptyState: {
     padding: 32,
     alignItems: "center",
@@ -262,6 +313,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
   },
+  addExerciseButton: {
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    marginBottom: 12,
+  },
+  blurView: {
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  gradientOverlay: {
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  buttonInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
+  addExerciseButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
   doneButton: {
     backgroundColor: "rgba(31, 41, 55, 0.6)",
     borderRadius: 12,
@@ -270,7 +356,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.2)",
     alignItems: "center",
-    marginTop: 16,
   },
   doneButtonText: {
     color: "#9ca3af",

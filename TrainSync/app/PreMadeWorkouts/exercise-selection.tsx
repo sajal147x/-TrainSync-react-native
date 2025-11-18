@@ -19,6 +19,7 @@ const ExerciseSelection: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const workoutName = (params.workoutName as string) || "";
+  const preMadeWorkoutId = params.preMadeWorkoutId as string | undefined;
   const [exercises, setExercises] = useState<ExerciseDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -431,6 +432,7 @@ const ExerciseSelection: React.FC = () => {
           setSelectedExercise(null);
         }}
         workoutName={workoutName}
+        preMadeWorkoutId={preMadeWorkoutId}
       />
     </SafeAreaView>
   );

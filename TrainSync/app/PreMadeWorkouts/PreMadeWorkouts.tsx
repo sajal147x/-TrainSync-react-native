@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
@@ -81,27 +81,39 @@ const PreMadeWorkouts: React.FC = () => {
             <Text style={styles.emptyText}>No pre-made workouts available</Text>
           </View>
         ) : (
-          <ScrollView 
-            style={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-          >
-            {workouts.map((workout) => (
+          <FlatList
+            data={workouts}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
               <TouchableOpacity
-                key={workout.id}
-                style={styles.workoutItem}
+                style={styles.workoutCard}
                 onPress={() => router.push({
                   pathname: "/PreMadeWorkouts/continue",
-                  params: { preMadeWorkoutId: workout.id }
+                  params: { preMadeWorkoutId: item.id }
                 })}
                 activeOpacity={0.8}
               >
-                <View style={styles.workoutItemContent}>
-                  <Text style={styles.workoutItemName}>{workout.name}</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-                </View>
+                <BlurView intensity={60} tint="dark" style={styles.cardBlur}>
+                  <View style={styles.cardContent}>
+                    <View style={styles.workoutInfo}>
+                      <Text style={styles.workoutName}>{item.name}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => router.push({
+                        pathname: "/PreMadeWorkouts/continue",
+                        params: { preMadeWorkoutId: item.id }
+                      })}
+                    >
+                      <Ionicons name="create-outline" size={24} color="#3b82f6" />
+                    </TouchableOpacity>
+                  </View>
+                </BlurView>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            )}
+            style={styles.workoutList}
+            contentContainerStyle={styles.workoutListContent}
+          />
         )}
       </View>
     </SafeAreaView>
@@ -208,33 +220,45 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyText: {
-    color: "#9ca3af",
-    fontSize: 16,
+    color: "#6b7280",
+    fontSize: 14,
     textAlign: "center",
+    marginTop: 16,
   },
-  listContainer: {
+  workoutList: {
     flex: 1,
-    marginTop: 8,
   },
-  workoutItem: {
-    backgroundColor: "rgba(31, 41, 55, 0.6)",
+  workoutListContent: {
+    paddingBottom: 24,
+  },
+  workoutCard: {
     borderRadius: 12,
+    overflow: "hidden",
     marginBottom: 12,
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.2)",
+  },
+  cardBlur: {
+    borderRadius: 12,
     overflow: "hidden",
   },
-  workoutItemContent: {
+  cardContent: {
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
   },
-  workoutItemName: {
+  workoutInfo: {
+    flex: 1,
+  },
+  workoutName: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-    flex: 1,
+  },
+  editButton: {
+    padding: 8,
+    marginLeft: 8,
   },
 });
 

@@ -15,13 +15,14 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { ExerciseDto, EquipmentTagDto } from "../api/exercises";
-import { createPreMadeRoutine } from "../api/PreMadeWorkout";
+import { createPreMadeRoutine, addExerciseToPreMadeWorkout } from "../api/PreMadeWorkout";
 
 interface PreMadeExerciseDetailsModalProps {
   visible: boolean;
   exercise: ExerciseDto | null;
   onClose: () => void;
   workoutName: string;
+  preMadeWorkoutId?: string;
 }
 
 const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = ({
@@ -29,6 +30,7 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
   exercise,
   onClose,
   workoutName,
+  preMadeWorkoutId,
 }) => {
   const router = useRouter();
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentTagDto | null>(null);
@@ -65,24 +67,42 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
 
     setIsLoading(true);
     try {
-      const preMadeWorkoutId = await createPreMadeRoutine({
-        name: workoutName,
-        exerciseId: exercise.id,
-        equipmentId: selectedEquipment?.id || "",
-      });
-      
-      onClose();
-      router.push({
-        pathname: "/PreMadeWorkouts/continue",
-        params: {
+      if (preMadeWorkoutId) {
+        // Adding to existing workout
+        await addExerciseToPreMadeWorkout({
           preMadeWorkoutId,
-        },
-      });
+          exerciseId: exercise.id,
+          equipmentId: selectedEquipment?.id || "",
+        });
+        
+        onClose();
+        router.push({
+          pathname: "/PreMadeWorkouts/continue",
+          params: {
+            preMadeWorkoutId,
+          },
+        });
+      } else {
+        // Creating new workout
+        const newPreMadeWorkoutId = await createPreMadeRoutine({
+          name: workoutName,
+          exerciseId: exercise.id,
+          equipmentId: selectedEquipment?.id || "",
+        });
+        
+        onClose();
+        router.push({
+          pathname: "/PreMadeWorkouts/continue",
+          params: {
+            preMadeWorkoutId: newPreMadeWorkoutId,
+          },
+        });
+      }
     } catch (error: any) {
-      console.error("Error creating pre-made routine:", error);
+      console.error("Error adding exercise to pre-made workout:", error);
       Alert.alert(
         "Error",
-        error.response?.data?.message || "Failed to create pre-made routine. Please try again."
+        error.response?.data?.message || "Failed to add exercise. Please try again."
       );
     } finally {
       setIsLoading(false);

@@ -57,3 +57,72 @@ export async function getPreMadeWorkout(
   return response.data;
 }
 
+export interface AddExerciseToPreMadeWorkoutRequest {
+  preMadeWorkoutId: string;
+  exerciseId: string;
+  equipmentId: string;
+}
+
+/**
+ * Adds an exercise to an existing pre-made workout.
+ */
+export async function addExerciseToPreMadeWorkout(
+  request: AddExerciseToPreMadeWorkoutRequest
+): Promise<void> {
+  await client.post("/add-exercise-to-premade-workout", request);
+}
+
+export interface AddSetToPreMadeWorkoutRequest {
+  exerciseId: string;
+  setNumber: number;
+}
+
+export interface SetDtoForDelete {
+  id: string;
+  setNumber: number;
+}
+
+export interface PreMadeWorkoutSetDto {
+  id: string;
+  setNumber: number;
+}
+
+export interface DeleteSetFromPreMadeWorkoutRequest {
+  deletedSetId: string;
+  newSets: SetDtoForDelete[];
+}
+
+/**
+ * Adds a set to an exercise in a pre-made workout.
+ */
+export async function addSetToPreMadeWorkout(
+  request: AddSetToPreMadeWorkoutRequest
+): Promise<string> {
+  const response = await client.post<string>(
+    "/add-set-to-pre-made-workout",
+    request
+  );
+  return response.data;
+}
+
+/**
+ * Deletes a set from an exercise in a pre-made workout.
+ */
+export async function deleteSetFromPreMadeWorkout(
+  request: DeleteSetFromPreMadeWorkoutRequest
+): Promise<void> {
+  await client.post("/delete-set-from-pre-made-workout", request);
+}
+
+/**
+ * Fetches all sets for a pre-made workout exercise.
+ */
+export async function getPreMadeWorkoutSets(
+  preMadeWorkoutExerciseId: string
+): Promise<PreMadeWorkoutSetDto[]> {
+  const response = await client.get<PreMadeWorkoutSetDto[]>(
+    `/getPreMadeWorkoutSets?preMadeWorkoutExerciseId=${preMadeWorkoutExerciseId}`
+  );
+  return response.data;
+}
+
