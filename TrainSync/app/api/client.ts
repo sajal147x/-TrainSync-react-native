@@ -4,7 +4,7 @@ import storage from "./storage";
 // Use your computer's IP if running on Expo mobile
 // To find your IP: run `ifconfig | grep "inet " | grep -v 127.0.0.1` on Mac/Linux
 // or `ipconfig` on Windows and look for IPv4 Address
-const API_BASE = "http://10.8.236.107:8080/api";
+const API_BASE = "http://10.0.0.53:8080/api";
 
 const client = axios.create({
   baseURL: API_BASE,
