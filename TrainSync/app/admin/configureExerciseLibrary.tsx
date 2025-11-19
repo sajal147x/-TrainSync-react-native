@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
-import { getEquipmentTags, EquipmentTagDto } from "../api/exercises";
+import { getEquipmentTags, getMuscleTags, EquipmentTagDto } from "../api/exercises";
 
 export default function ConfigureExerciseLibrary() {
   const router = useRouter();
@@ -20,22 +20,35 @@ export default function ConfigureExerciseLibrary() {
     new Set()
   );
   const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
+  const [muscleTags, setMuscleTags] = useState<string[]>([]);
+  const [selectedPrimaryMuscles, setSelectedPrimaryMuscles] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedSecondaryMuscles, setSelectedSecondaryMuscles] = useState<Set<string>>(
+    new Set()
+  );
+  const [isPrimaryMuscleDropdownOpen, setIsPrimaryMuscleDropdownOpen] = useState(false);
+  const [isSecondaryMuscleDropdownOpen, setIsSecondaryMuscleDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fetchEquipmentTags = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       try {
-        const tags = await getEquipmentTags();
-        setEquipmentTags(tags);
+        const [equipmentData, muscleData] = await Promise.all([
+          getEquipmentTags(),
+          getMuscleTags(),
+        ]);
+        setEquipmentTags(equipmentData);
+        setMuscleTags(muscleData);
       } catch (error) {
-        console.error("Failed to fetch equipment tags:", error);
+        console.error("Failed to fetch tags:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchEquipmentTags();
+    fetchData();
   }, []);
 
   const toggleEquipment = (equipmentId: string) => {
@@ -53,6 +66,34 @@ export default function ConfigureExerciseLibrary() {
       .filter((tag) => selectedEquipment.has(tag.id))
       .map((tag) => tag.name)
       .join(", ");
+  };
+
+  const togglePrimaryMuscle = (muscleName: string) => {
+    const newSelected = new Set(selectedPrimaryMuscles);
+    if (newSelected.has(muscleName)) {
+      newSelected.delete(muscleName);
+    } else {
+      newSelected.add(muscleName);
+    }
+    setSelectedPrimaryMuscles(newSelected);
+  };
+
+  const toggleSecondaryMuscle = (muscleName: string) => {
+    const newSelected = new Set(selectedSecondaryMuscles);
+    if (newSelected.has(muscleName)) {
+      newSelected.delete(muscleName);
+    } else {
+      newSelected.add(muscleName);
+    }
+    setSelectedSecondaryMuscles(newSelected);
+  };
+
+  const getSelectedPrimaryMuscleNames = () => {
+    return Array.from(selectedPrimaryMuscles).join(", ");
+  };
+
+  const getSelectedSecondaryMuscleNames = () => {
+    return Array.from(selectedSecondaryMuscles).join(", ");
   };
 
   return (
@@ -83,7 +124,11 @@ export default function ConfigureExerciseLibrary() {
           <Text style={styles.label}>Equipment</Text>
           <TouchableOpacity
             style={styles.dropdownButton}
-            onPress={() => setIsEquipmentDropdownOpen(!isEquipmentDropdownOpen)}
+            onPress={() => {
+              setIsEquipmentDropdownOpen(!isEquipmentDropdownOpen);
+              setIsPrimaryMuscleDropdownOpen(false);
+              setIsSecondaryMuscleDropdownOpen(false);
+            }}
           >
             <Text
               style={[
@@ -104,30 +149,160 @@ export default function ConfigureExerciseLibrary() {
 
           {isEquipmentDropdownOpen && (
             <View style={styles.dropdownContainer}>
-              {isLoading ? (
-                <Text style={styles.loadingText}>Loading equipment...</Text>
-              ) : equipmentTags.length === 0 ? (
-                <Text style={styles.emptyText}>No equipment available</Text>
-              ) : (
-                equipmentTags.map((equipment) => (
-                  <TouchableOpacity
-                    key={equipment.id}
-                    style={styles.checkboxItem}
-                    onPress={() => toggleEquipment(equipment.id)}
-                  >
-                    <View style={styles.checkbox}>
-                      {selectedEquipment.has(equipment.id) && (
-                        <Ionicons name="checkmark" size={16} color="#3b82f6" />
-                      )}
-                    </View>
-                    <Text style={styles.checkboxLabel}>{equipment.name}</Text>
-                  </TouchableOpacity>
-                ))
-              )}
+              <ScrollView 
+                nestedScrollEnabled={true}
+                style={styles.dropdownScrollView}
+                showsVerticalScrollIndicator={true}
+              >
+                {isLoading ? (
+                  <Text style={styles.loadingText}>Loading equipment...</Text>
+                ) : equipmentTags.length === 0 ? (
+                  <Text style={styles.emptyText}>No equipment available</Text>
+                ) : (
+                  equipmentTags.map((equipment) => (
+                    <TouchableOpacity
+                      key={equipment.id}
+                      style={styles.checkboxItem}
+                      onPress={() => toggleEquipment(equipment.id)}
+                    >
+                      <View style={styles.checkbox}>
+                        {selectedEquipment.has(equipment.id) && (
+                          <Ionicons name="checkmark" size={16} color="#3b82f6" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxLabel}>{equipment.name}</Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Primary Muscles</Text>
+          <TouchableOpacity
+            style={styles.dropdownButton}
+            onPress={() => {
+              setIsPrimaryMuscleDropdownOpen(!isPrimaryMuscleDropdownOpen);
+              setIsEquipmentDropdownOpen(false);
+              setIsSecondaryMuscleDropdownOpen(false);
+            }}
+          >
+            <Text
+              style={[
+                styles.dropdownButtonText,
+                selectedPrimaryMuscles.size === 0 && styles.placeholderText,
+              ]}
+            >
+              {selectedPrimaryMuscles.size > 0
+                ? getSelectedPrimaryMuscleNames() || "Select primary muscles"
+                : "Select primary muscles"}
+            </Text>
+            <Ionicons
+              name={isPrimaryMuscleDropdownOpen ? "chevron-up" : "chevron-down"}
+              size={20}
+              color="#64748b"
+            />
+          </TouchableOpacity>
+
+          {isPrimaryMuscleDropdownOpen && (
+            <View style={styles.dropdownContainer}>
+              <ScrollView 
+                nestedScrollEnabled={true}
+                style={styles.dropdownScrollView}
+                showsVerticalScrollIndicator={true}
+              >
+                {isLoading ? (
+                  <Text style={styles.loadingText}>Loading muscles...</Text>
+                ) : muscleTags.length === 0 ? (
+                  <Text style={styles.emptyText}>No muscles available</Text>
+                ) : (
+                  muscleTags.map((muscle) => (
+                    <TouchableOpacity
+                      key={muscle}
+                      style={styles.checkboxItem}
+                      onPress={() => togglePrimaryMuscle(muscle)}
+                    >
+                      <View style={styles.checkbox}>
+                        {selectedPrimaryMuscles.has(muscle) && (
+                          <Ionicons name="checkmark" size={16} color="#3b82f6" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxLabel}>{muscle}</Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Secondary Muscles</Text>
+          <TouchableOpacity
+            style={styles.dropdownButton}
+            onPress={() => {
+              setIsSecondaryMuscleDropdownOpen(!isSecondaryMuscleDropdownOpen);
+              setIsEquipmentDropdownOpen(false);
+              setIsPrimaryMuscleDropdownOpen(false);
+            }}
+          >
+            <Text
+              style={[
+                styles.dropdownButtonText,
+                selectedSecondaryMuscles.size === 0 && styles.placeholderText,
+              ]}
+            >
+              {selectedSecondaryMuscles.size > 0
+                ? getSelectedSecondaryMuscleNames() || "Select secondary muscles"
+                : "Select secondary muscles"}
+            </Text>
+            <Ionicons
+              name={isSecondaryMuscleDropdownOpen ? "chevron-up" : "chevron-down"}
+              size={20}
+              color="#64748b"
+            />
+          </TouchableOpacity>
+
+          {isSecondaryMuscleDropdownOpen && (
+            <View style={styles.dropdownContainer}>
+              <ScrollView 
+                nestedScrollEnabled={true}
+                style={styles.dropdownScrollView}
+                showsVerticalScrollIndicator={true}
+              >
+                {isLoading ? (
+                  <Text style={styles.loadingText}>Loading muscles...</Text>
+                ) : muscleTags.length === 0 ? (
+                  <Text style={styles.emptyText}>No muscles available</Text>
+                ) : (
+                  muscleTags.map((muscle) => (
+                    <TouchableOpacity
+                      key={muscle}
+                      style={styles.checkboxItem}
+                      onPress={() => toggleSecondaryMuscle(muscle)}
+                    >
+                      <View style={styles.checkbox}>
+                        {selectedSecondaryMuscles.has(muscle) && (
+                          <Ionicons name="checkmark" size={16} color="#3b82f6" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxLabel}>{muscle}</Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
             </View>
           )}
         </View>
       </ScrollView>
+
+      <View style={styles.saveButtonContainer}>
+        <TouchableOpacity style={styles.saveButton} onPress={() => {}}>
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -201,8 +376,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#334155",
-    maxHeight: 300,
-    padding: 8,
+    maxHeight: 200,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 1000,
+  },
+  dropdownScrollView: {
+    maxHeight: 200,
   },
   checkboxItem: {
     flexDirection: "row",
@@ -237,6 +420,26 @@ const styles = StyleSheet.create({
     color: "#64748b",
     padding: 12,
     textAlign: "center",
+  },
+  saveButtonContainer: {
+    paddingBottom: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#334155",
+    marginHorizontal: -24,
+    paddingHorizontal: 24,
+  },
+  saveButton: {
+    backgroundColor: "#3b82f6",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });
 
