@@ -124,6 +124,44 @@ const NewWorkout: React.FC = () => {
             </LinearGradient>
           </BlurView>
         </TouchableOpacity>
+
+        {/* OR Divider */}
+        <View style={styles.orContainer}>
+          <View style={styles.orLine} />
+          <Text style={styles.orText}>OR</Text>
+          <View style={styles.orLine} />
+        </View>
+
+        {/* Use Pre-Made Workout Button */}
+        <TouchableOpacity
+          style={styles.preMadeButton}
+          activeOpacity={0.8}
+          onPress={() => router.push({
+            pathname: "/workout/startWorkoutUsingPreMade",
+            params: {
+              workoutName,
+              workoutDate: workoutDate.toISOString(),
+            }
+          })}
+        >
+          <BlurView intensity={80} tint="dark" style={styles.blurView}>
+            <LinearGradient
+              colors={[
+                "rgba(59, 130, 246, 0.2)",
+                "rgba(59, 130, 246, 0.1)",
+                "rgba(59, 130, 246, 0.2)",
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.gradientOverlay}
+            >
+              <View style={styles.buttonInner}>
+                <Ionicons name="list-outline" size={24} color="#fff" />
+                <Text style={styles.addExerciseText}>Use a Pre-Made Workout</Text>
+              </View>
+            </LinearGradient>
+          </BlurView>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -232,6 +270,34 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  orContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 24,
+    gap: 16,
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#374151",
+  },
+  orText: {
+    color: "#9ca3af",
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: 2,
+  },
+  preMadeButton: {
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });
 

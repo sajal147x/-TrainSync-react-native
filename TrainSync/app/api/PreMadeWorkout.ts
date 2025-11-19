@@ -126,3 +126,17 @@ export async function getPreMadeWorkoutSets(
   return response.data;
 }
 
+/**
+ * Starts a workout using a pre-made workout.
+ * Returns the workout ID.
+ */
+export async function startWorkoutUsingPreMade(
+  preMadeWorkoutId: string
+): Promise<string> {
+  const response = await client.post<string>(
+    "/start-workout-using-pre-made",
+    { preMadeWorkoutId }
+  );
+  return response.data;
+}
+
