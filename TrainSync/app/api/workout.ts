@@ -22,6 +22,8 @@ export interface ExerciseDto {
   id: string;
   name: string;
   sets: SetDto[];
+  preFilledFlag?: string;
+  preFilledDate?: string;
 }
 
 export interface Workout {

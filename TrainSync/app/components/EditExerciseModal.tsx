@@ -31,6 +31,8 @@ interface EditExerciseModalProps {
   exerciseName: string;
   exerciseId: string;
   existingSets?: SetDto[];
+  preFilledFlag?: string;
+  preFilledDate?: string;
 }
 
 const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
@@ -39,12 +41,27 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
   exerciseName,
   exerciseId,
   existingSets = [],
+  preFilledFlag,
+  preFilledDate,
 }) => {
   console.log('EditExerciseModal rendered with exerciseId:', exerciseId, 'exerciseName:', exerciseName);
   
   const [sets, setSets] = useState<Set[]>([]);
   const [savingSetId, setSavingSetId] = useState<string | null>(null);
   const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
+
+  // Format date from ISO format to "Nov 20, 2025" format
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    return `${month} ${day}, ${year}`;
+  };
 
   // Pre-populate sets when modal opens with existing sets
   useEffect(() => {
@@ -260,6 +277,14 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                   style={styles.setsContainer}
                   showsVerticalScrollIndicator={false}
                 >
+                  {preFilledFlag === "YES" && preFilledDate && (
+                    <View style={styles.infoBanner}>
+                      <Ionicons name="information-circle" size={20} color="#3b82f6" />
+                      <Text style={styles.infoBannerText}>
+                        Set Information pre-filled workout from {formatDate(preFilledDate)}
+                      </Text>
+                    </View>
+                  )}
                   {sets.length === 0 ? (
                     <View style={styles.emptyState}>
                       <Ionicons name="barbell-outline" size={48} color="#4b5563" />
@@ -590,6 +615,23 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "600",
+  },
+  infoBanner: {
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+  },
+  infoBannerText: {
+    color: "#93c5fd",
+    fontSize: 14,
+    fontWeight: "500",
+    flex: 1,
   },
 });
 

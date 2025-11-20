@@ -23,7 +23,7 @@ const ContinueWorkout: React.FC = () => {
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<{ name: string; exerciseId: string; index: number; sets: any[] } | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<{ name: string; exerciseId: string; index: number; sets: any[]; preFilledFlag?: string; preFilledDate?: string } | null>(null);
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -97,7 +97,9 @@ const ContinueWorkout: React.FC = () => {
                         name: exercise.name, 
                         exerciseId: exercise.id, 
                         index,
-                        sets: exercise.sets || []
+                        sets: exercise.sets || [],
+                        preFilledFlag: exercise.preFilledFlag,
+                        preFilledDate: exercise.preFilledDate,
                       });
                       setEditModalVisible(true);
                     }}
@@ -161,6 +163,8 @@ const ContinueWorkout: React.FC = () => {
         exerciseName={selectedExercise?.name || ""}
         exerciseId={selectedExercise?.exerciseId || ""}
         existingSets={selectedExercise?.sets || []}
+        preFilledFlag={selectedExercise?.preFilledFlag}
+        preFilledDate={selectedExercise?.preFilledDate}
       />
     </SafeAreaView>
   );
