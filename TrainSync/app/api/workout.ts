@@ -24,6 +24,7 @@ export interface ExerciseDto {
   sets: SetDto[];
   preFilledFlag?: string;
   preFilledDate?: string;
+  preFilledWorkoutName?: string;
 }
 
 export interface Workout {

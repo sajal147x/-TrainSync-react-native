@@ -33,6 +33,7 @@ interface EditExerciseModalProps {
   existingSets?: SetDto[];
   preFilledFlag?: string;
   preFilledDate?: string;
+  preFilledWorkoutName?: string;
 }
 
 const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
@@ -43,6 +44,7 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
   existingSets = [],
   preFilledFlag,
   preFilledDate,
+  preFilledWorkoutName,
 }) => {
   console.log('EditExerciseModal rendered with exerciseId:', exerciseId, 'exerciseName:', exerciseName);
   
@@ -281,7 +283,7 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                     <View style={styles.infoBanner}>
                       <Ionicons name="information-circle" size={20} color="#3b82f6" />
                       <Text style={styles.infoBannerText}>
-                        Set Information pre-filled workout from {formatDate(preFilledDate)}
+                        Pre filled from {preFilledWorkoutName || "workout"} on {formatDate(preFilledDate)}
                       </Text>
                     </View>
                   )}
