@@ -13,6 +13,7 @@ import { TouchableOpacity } from "react-native";
 import {
   getEquipmentTags,
   getMuscleTags,
+  createExercise,
   EquipmentTagDto,
   MuscleTagDto,
 } from "../api/exercises";
@@ -35,6 +36,11 @@ export default function ConfigureExerciseLibrary() {
   const [isPrimaryMuscleDropdownOpen, setIsPrimaryMuscleDropdownOpen] = useState(false);
   const [isSecondaryMuscleDropdownOpen, setIsSecondaryMuscleDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSavingExercise, setIsSavingExercise] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState<{
+    type: "error" | "success";
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,6 +115,41 @@ export default function ConfigureExerciseLibrary() {
     return Array.from(selectedSecondaryMuscles)
       .map((muscleId) => getMuscleNameById(muscleId))
       .join(", ");
+  };
+
+  const handleSave = async () => {
+    if (!exerciseName.trim()) {
+      setSaveFeedback({
+        type: "error",
+        message: "Exercise name cannot be empty.",
+      });
+      return;
+    }
+
+    setIsSavingExercise(true);
+    setSaveFeedback(null);
+
+    try {
+      await createExercise({
+        name: exerciseName.trim(),
+        equipmentIds: Array.from(selectedEquipment),
+        muscleTagIdsPrimary: Array.from(selectedPrimaryMuscles),
+        muscleTagIdsSecondary: Array.from(selectedSecondaryMuscles),
+      });
+
+      setSaveFeedback({
+        type: "success",
+        message: "Exercise saved successfully.",
+      });
+    } catch (error) {
+      console.error("Failed to save exercise:", error);
+      setSaveFeedback({
+        type: "error",
+        message: "Unable to save exercise. Please try again.",
+      });
+    } finally {
+      setIsSavingExercise(false);
+    }
   };
 
   return (
@@ -314,9 +355,30 @@ export default function ConfigureExerciseLibrary() {
       </ScrollView>
 
       <View style={styles.saveButtonContainer}>
-        <TouchableOpacity style={styles.saveButton} onPress={() => {}}>
-          <Text style={styles.saveButtonText}>Save</Text>
+        <TouchableOpacity
+          style={[
+            styles.saveButton,
+            isSavingExercise && styles.saveButtonDisabled,
+          ]}
+          onPress={handleSave}
+          disabled={isSavingExercise}
+        >
+          <Text style={styles.saveButtonText}>
+            {isSavingExercise ? "Saving..." : "Save"}
+          </Text>
         </TouchableOpacity>
+        {saveFeedback && (
+          <Text
+            style={[
+              styles.statusText,
+              saveFeedback.type === "error"
+                ? styles.errorText
+                : styles.successText,
+            ]}
+          >
+            {saveFeedback.message}
+          </Text>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -455,6 +517,20 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "700",
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  statusText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  errorText: {
+    color: "#f87171",
+  },
+  successText: {
+    color: "#34d399",
   },
 });
 

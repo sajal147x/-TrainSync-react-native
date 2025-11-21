@@ -55,6 +55,20 @@ export interface PageResponse<T> {
   empty: boolean;
 }
 
+export interface CreateExerciseRequest {
+  name: string;
+  equipmentIds: string[];
+  muscleTagIdsPrimary: string[];
+  muscleTagIdsSecondary: string[];
+}
+
+export async function createExercise(
+  payload: CreateExerciseRequest
+): Promise<ExerciseDto> {
+  const response = await client.post<ExerciseDto>("/create-exercise", payload);
+  return response.data;
+}
+
 export async function getExercises(
   params?: GetExercisesParams
 ): Promise<ExerciseDto[]> {
