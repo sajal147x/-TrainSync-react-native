@@ -123,44 +123,50 @@ const ExerciseSelection: React.FC = () => {
     router.back();
   };
 
-  const renderExerciseItem = ({ item }: { item: ExerciseDto }) => (
-    <TouchableOpacity
-      style={styles.exerciseCard}
-      onPress={() => handleExercisePress(item)}
-      activeOpacity={0.7}
-    >
-      <Text style={styles.exerciseName}>{item.name}</Text>
-      <View style={styles.tagsContainer}>
-        {item.muscleTags.map((tag, index) => {
-          const rotation =
-            index % 3 === 0 ? "-1deg" : index % 3 === 1 ? "1deg" : "0deg";
-          const isPrimary = tag.level === "PRIMARY";
-          const isSecondary = tag.level === "SECONDARY";
-          return (
-            <View
-              key={index}
-              style={[
-                styles.tagStickyNote,
-                isPrimary && styles.tagStickyNotePrimary,
-                isSecondary && styles.tagStickyNoteSecondary,
-                { transform: [{ rotate: rotation }] },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.tagText,
-                  isPrimary && styles.tagTextPrimary,
-                  isSecondary && styles.tagTextSecondary,
-                ]}
-              >
-                {tag.name}
-              </Text>
-            </View>
-          );
-        })}
-      </View>
-    </TouchableOpacity>
-  );
+  const renderExerciseItem = ({ item }: { item: ExerciseDto }) => {
+    const primaryMuscleTags = item.muscleTags.filter(
+      (tag) => tag.level === "PRIMARY"
+    );
+    const equipmentList =
+      item.equipmentTags.length > 0
+        ? `(${item.equipmentTags.map((tag) => tag.name).join(", ")})`
+        : "(No equipment listed)";
+
+    return (
+      <TouchableOpacity
+        style={styles.exerciseCard}
+        onPress={() => handleExercisePress(item)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.exerciseName}>{item.name}</Text>
+        <View style={styles.exerciseMetaRow}>
+          <View style={styles.tagsContainer}>
+            {primaryMuscleTags.map((tag, index) => {
+              const rotation =
+                index % 3 === 0 ? "-1deg" : index % 3 === 1 ? "1deg" : "0deg";
+              return (
+                <View
+                  key={index}
+                  style={[
+                    styles.tagStickyNote,
+                    styles.tagStickyNotePrimary,
+                    { transform: [{ rotate: rotation }] },
+                  ]}
+                >
+                  <Text style={[styles.tagText, styles.tagTextPrimary]}>
+                    {tag.name}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+          <View style={styles.equipmentBox}>
+            <Text style={styles.equipmentText}>{equipmentList}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -633,10 +639,18 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 12,
   },
+  exerciseMetaRow: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    gap: 4,
+  },
   tagsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 2,
+    flexShrink: 1,
+    flexGrow: 0,
   },
   tagStickyNote: {
     backgroundColor: "#fef3c7",
@@ -669,6 +683,20 @@ const styles = StyleSheet.create({
   },
   tagTextSecondary: {
     color: "#78350f",
+  },
+  equipmentBox: {
+    backgroundColor: "#1f2937",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(148, 163, 184, 0.4)",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginLeft: 2,
+  },
+  equipmentText: {
+    color: "#e5e7eb",
+    fontSize: 12,
+    fontWeight: "600",
   },
 });
 
