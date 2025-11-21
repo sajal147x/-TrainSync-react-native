@@ -12,7 +12,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getExercises, ExerciseDto, getMuscleTags, getEquipmentTags, EquipmentTagDto } from "../api/exercises";
+import {
+  getExercises,
+  ExerciseDto,
+  getMuscleTags,
+  getEquipmentTags,
+  EquipmentTagDto,
+  MuscleTagDto,
+} from "../api/exercises";
 import ExerciseDetailsModal from "../components/ExerciseDetailsModal";
 
 const ExerciseSelection: React.FC = () => {
@@ -25,8 +32,8 @@ const ExerciseSelection: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [muscleTags, setMuscleTags] = useState<string[]>([]);
-  const [selectedMuscleTag, setSelectedMuscleTag] = useState<string | null>(null);
+  const [muscleTags, setMuscleTags] = useState<MuscleTagDto[]>([]);
+  const [selectedMuscleTag, setSelectedMuscleTag] = useState<MuscleTagDto | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [equipmentTags, setEquipmentTags] = useState<EquipmentTagDto[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
@@ -67,7 +74,11 @@ const ExerciseSelection: React.FC = () => {
     };
   }, [searchText, selectedMuscleTag, selectedEquipment]);
 
-  const fetchExercises = async (search?: string, muscleTag?: string | null, equipmentId?: string | null) => {
+  const fetchExercises = async (
+    search?: string,
+    muscleTag?: MuscleTagDto | null,
+    equipmentId?: string | null
+  ) => {
     setLoading(true);
     setError(null);
 
@@ -77,7 +88,7 @@ const ExerciseSelection: React.FC = () => {
         params.searchText = search;
       }
       if (muscleTag) {
-        params.muscleTag = muscleTag;
+        params.muscleTag = muscleTag.id;
       }
       if (equipmentId) {
         params.equipmentTag = equipmentId;
@@ -225,7 +236,7 @@ const ExerciseSelection: React.FC = () => {
             style={styles.dropdownIcon}
           />
           <Text style={styles.dropdownButtonText}>
-            {selectedMuscleTag || "All Muscle Groups"}
+            {selectedMuscleTag?.name || "All Muscle Groups"}
           </Text>
           <Ionicons
             name={isDropdownOpen ? "chevron-up" : "chevron-down"}
@@ -265,30 +276,31 @@ const ExerciseSelection: React.FC = () => {
               </TouchableOpacity>
 
               {muscleTags.map((tag) => (
-                <TouchableOpacity
-                  key={tag}
-                  style={[
-                    styles.dropdownItem,
-                    selectedMuscleTag === tag && styles.dropdownItemSelected,
-                  ]}
-                  onPress={() => {
-                    setSelectedMuscleTag(tag);
-                    setIsDropdownOpen(false);
-                  }}
-                >
-                  <Text
+                  <TouchableOpacity
+                    key={tag.id}
                     style={[
-                      styles.dropdownItemText,
-                      selectedMuscleTag === tag &&
-                        styles.dropdownItemTextSelected,
+                      styles.dropdownItem,
+                      selectedMuscleTag?.id === tag.id &&
+                        styles.dropdownItemSelected,
                     ]}
+                    onPress={() => {
+                      setSelectedMuscleTag(tag);
+                      setIsDropdownOpen(false);
+                    }}
                   >
-                    {tag}
-                  </Text>
-                  {selectedMuscleTag === tag && (
-                    <Ionicons name="checkmark" size={20} color="#3b82f6" />
-                  )}
-                </TouchableOpacity>
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        selectedMuscleTag?.id === tag.id &&
+                          styles.dropdownItemTextSelected,
+                      ]}
+                    >
+                      {tag.name}
+                    </Text>
+                    {selectedMuscleTag?.id === tag.id && (
+                      <Ionicons name="checkmark" size={20} color="#3b82f6" />
+                    )}
+                  </TouchableOpacity>
               ))}
             </ScrollView>
           </View>

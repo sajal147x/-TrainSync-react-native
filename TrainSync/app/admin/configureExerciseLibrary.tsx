@@ -10,7 +10,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
-import { getEquipmentTags, getMuscleTags, EquipmentTagDto } from "../api/exercises";
+import {
+  getEquipmentTags,
+  getMuscleTags,
+  EquipmentTagDto,
+  MuscleTagDto,
+} from "../api/exercises";
 
 export default function ConfigureExerciseLibrary() {
   const router = useRouter();
@@ -20,7 +25,7 @@ export default function ConfigureExerciseLibrary() {
     new Set()
   );
   const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
-  const [muscleTags, setMuscleTags] = useState<string[]>([]);
+  const [muscleTags, setMuscleTags] = useState<MuscleTagDto[]>([]);
   const [selectedPrimaryMuscles, setSelectedPrimaryMuscles] = useState<Set<string>>(
     new Set()
   );
@@ -68,32 +73,42 @@ export default function ConfigureExerciseLibrary() {
       .join(", ");
   };
 
-  const togglePrimaryMuscle = (muscleName: string) => {
+  const getMuscleNameById = (id: string) => {
+    return (
+      muscleTags.find((muscle) => muscle.id === id)?.name ?? id
+    );
+  };
+
+  const togglePrimaryMuscle = (muscleId: string) => {
     const newSelected = new Set(selectedPrimaryMuscles);
-    if (newSelected.has(muscleName)) {
-      newSelected.delete(muscleName);
+    if (newSelected.has(muscleId)) {
+      newSelected.delete(muscleId);
     } else {
-      newSelected.add(muscleName);
+      newSelected.add(muscleId);
     }
     setSelectedPrimaryMuscles(newSelected);
   };
 
-  const toggleSecondaryMuscle = (muscleName: string) => {
+  const toggleSecondaryMuscle = (muscleId: string) => {
     const newSelected = new Set(selectedSecondaryMuscles);
-    if (newSelected.has(muscleName)) {
-      newSelected.delete(muscleName);
+    if (newSelected.has(muscleId)) {
+      newSelected.delete(muscleId);
     } else {
-      newSelected.add(muscleName);
+      newSelected.add(muscleId);
     }
     setSelectedSecondaryMuscles(newSelected);
   };
 
   const getSelectedPrimaryMuscleNames = () => {
-    return Array.from(selectedPrimaryMuscles).join(", ");
+    return Array.from(selectedPrimaryMuscles)
+      .map((muscleId) => getMuscleNameById(muscleId))
+      .join(", ");
   };
 
   const getSelectedSecondaryMuscleNames = () => {
-    return Array.from(selectedSecondaryMuscles).join(", ");
+    return Array.from(selectedSecondaryMuscles)
+      .map((muscleId) => getMuscleNameById(muscleId))
+      .join(", ");
   };
 
   return (
@@ -220,16 +235,16 @@ export default function ConfigureExerciseLibrary() {
                 ) : (
                   muscleTags.map((muscle) => (
                     <TouchableOpacity
-                      key={muscle}
+                      key={muscle.id}
                       style={styles.checkboxItem}
-                      onPress={() => togglePrimaryMuscle(muscle)}
+                      onPress={() => togglePrimaryMuscle(muscle.id)}
                     >
                       <View style={styles.checkbox}>
-                        {selectedPrimaryMuscles.has(muscle) && (
+                        {selectedPrimaryMuscles.has(muscle.id) && (
                           <Ionicons name="checkmark" size={16} color="#3b82f6" />
                         )}
                       </View>
-                      <Text style={styles.checkboxLabel}>{muscle}</Text>
+                      <Text style={styles.checkboxLabel}>{muscle.name}</Text>
                     </TouchableOpacity>
                   ))
                 )}
@@ -279,16 +294,16 @@ export default function ConfigureExerciseLibrary() {
                 ) : (
                   muscleTags.map((muscle) => (
                     <TouchableOpacity
-                      key={muscle}
+                      key={muscle.id}
                       style={styles.checkboxItem}
-                      onPress={() => toggleSecondaryMuscle(muscle)}
+                      onPress={() => toggleSecondaryMuscle(muscle.id)}
                     >
                       <View style={styles.checkbox}>
-                        {selectedSecondaryMuscles.has(muscle) && (
+                        {selectedSecondaryMuscles.has(muscle.id) && (
                           <Ionicons name="checkmark" size={16} color="#3b82f6" />
                         )}
                       </View>
-                      <Text style={styles.checkboxLabel}>{muscle}</Text>
+                      <Text style={styles.checkboxLabel}>{muscle.name}</Text>
                     </TouchableOpacity>
                   ))
                 )}

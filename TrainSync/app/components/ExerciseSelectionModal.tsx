@@ -12,7 +12,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { getExercises, ExerciseDto, getMuscleTags } from "../api/exercises";
+import {
+  getExercises,
+  ExerciseDto,
+  getMuscleTags,
+  MuscleTagDto,
+} from "../api/exercises";
 
 interface ExerciseSelectionModalProps {
   visible: boolean;
@@ -29,8 +34,10 @@ const ExerciseSelectionModal: React.FC<ExerciseSelectionModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [muscleTags, setMuscleTags] = useState<string[]>([]);
-  const [selectedMuscleTag, setSelectedMuscleTag] = useState<string | null>(null);
+  const [muscleTags, setMuscleTags] = useState<MuscleTagDto[]>([]);
+  const [selectedMuscleTag, setSelectedMuscleTag] = useState<MuscleTagDto | null>(
+    null
+  );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -197,7 +204,7 @@ const ExerciseSelectionModal: React.FC<ExerciseSelectionModalProps> = ({
                   style={styles.dropdownIcon}
                 />
                 <Text style={styles.dropdownButtonText}>
-                  {selectedMuscleTag || "All Muscle Groups"}
+                  {selectedMuscleTag?.name || "All Muscle Groups"}
                 </Text>
                 <Ionicons
                   name={isDropdownOpen ? "chevron-up" : "chevron-down"}
@@ -238,10 +245,11 @@ const ExerciseSelectionModal: React.FC<ExerciseSelectionModalProps> = ({
 
                     {muscleTags.map((tag) => (
                       <TouchableOpacity
-                        key={tag}
+                        key={tag.id}
                         style={[
                           styles.dropdownItem,
-                          selectedMuscleTag === tag && styles.dropdownItemSelected,
+                          selectedMuscleTag?.id === tag.id &&
+                            styles.dropdownItemSelected,
                         ]}
                         onPress={() => {
                           setSelectedMuscleTag(tag);
@@ -251,13 +259,13 @@ const ExerciseSelectionModal: React.FC<ExerciseSelectionModalProps> = ({
                         <Text
                           style={[
                             styles.dropdownItemText,
-                            selectedMuscleTag === tag &&
+                            selectedMuscleTag?.id === tag.id &&
                               styles.dropdownItemTextSelected,
                           ]}
                         >
-                          {tag}
+                          {tag.name}
                         </Text>
-                        {selectedMuscleTag === tag && (
+                        {selectedMuscleTag?.id === tag.id && (
                           <Ionicons name="checkmark" size={20} color="#3b82f6" />
                         )}
                       </TouchableOpacity>

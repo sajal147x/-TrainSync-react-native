@@ -1,6 +1,7 @@
 import client from "./client";
 
 export interface MuscleTagDto {
+  id: string;
   name: string;
   level: string;
 }
@@ -75,10 +76,13 @@ export async function getExercises(
     return {
       id: exercise.id,
       name: exercise.name,
-      muscleTags: Array.isArray(muscleTags) ? muscleTags.map((tag: any) => ({
-        name: tag.name,
-        level: tag.level,
-      })) : [],
+      muscleTags: Array.isArray(muscleTags)
+        ? muscleTags.map((tag: any) => ({
+            id: tag.id ?? tag.name,
+            name: tag.name,
+            level: tag.level,
+          }))
+        : [],
       equipmentTags: Array.isArray(equipmentTags) ? equipmentTags.map((tag: any) => ({
         id: tag.id,
         name: tag.name,
@@ -89,8 +93,8 @@ export async function getExercises(
   return exercises;
 }
 
-export async function getMuscleTags(): Promise<string[]> {
-  const response = await client.get<string[]>("/exercises/muscletags");
+export async function getMuscleTags(): Promise<MuscleTagDto[]> {
+  const response = await client.get<MuscleTagDto[]>("/exercises/muscletags");
   return response.data;
 }
 
