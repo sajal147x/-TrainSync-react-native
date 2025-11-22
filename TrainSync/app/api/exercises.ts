@@ -76,11 +76,7 @@ export async function getExercises(
     params,
   });
   
-  // Log raw response to debug equipmentTags issue
-  if (response.data.content && response.data.content.length > 0) {
-    console.log("🔍 Raw API response sample:", JSON.stringify(response.data.content[0], null, 2));
-  }
-  
+
   // Transform the response to ensure equipmentTags is properly mapped
   const exercises = response.data.content.map((exercise: any) => {
     // Handle both camelCase and snake_case field names
