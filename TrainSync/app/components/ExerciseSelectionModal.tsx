@@ -17,6 +17,7 @@ import {
   ExerciseDto,
   getMuscleTags,
   MuscleTagDto,
+  GetExercisesParams,
 } from "../api/exercises";
 
 interface ExerciseSelectionModalProps {
@@ -77,9 +78,10 @@ const ExerciseSelectionModal: React.FC<ExerciseSelectionModalProps> = ({
     setError(null);
 
     try {
-      const params = search && search.length >= 3 ? { searchText: search } : {};
+      const params: GetExercisesParams =
+        search && search.length >= 3 ? { searchText: search } : {};
       const data = await getExercises(params);
-      setExercises(data);
+      setExercises(data.content);
     } catch (err: any) {
       console.error("Error fetching exercises:", err);
       setError(err.response?.data?.message || "Failed to fetch exercises");

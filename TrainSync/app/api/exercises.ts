@@ -71,18 +71,16 @@ export async function createExercise(
 
 export async function getExercises(
   params?: GetExercisesParams
-): Promise<ExerciseDto[]> {
-  const response = await client.get<PageResponse<ExerciseDto>>("/exercises", {
+): Promise<PageResponse<ExerciseDto>> {
+  const response = await client.get<PageResponse<any>>("/exercises", {
     params,
   });
-  
 
-  // Transform the response to ensure equipmentTags is properly mapped
-  const exercises = response.data.content.map((exercise: any) => {
-    // Handle both camelCase and snake_case field names
+  // Transform the response to ensure tags are normalized
+  const normalizedExercises = response.data.content.map((exercise: any) => {
     const equipmentTags = exercise.equipmentTags || exercise.equipment_tags || [];
     const muscleTags = exercise.muscleTags || exercise.muscle_tags || [];
-    
+
     return {
       id: exercise.id,
       name: exercise.name,
@@ -93,14 +91,19 @@ export async function getExercises(
             level: tag.level,
           }))
         : [],
-      equipmentTags: Array.isArray(equipmentTags) ? equipmentTags.map((tag: any) => ({
-        id: tag.id,
-        name: tag.name,
-      })) : [],
+      equipmentTags: Array.isArray(equipmentTags)
+        ? equipmentTags.map((tag: any) => ({
+            id: tag.id,
+            name: tag.name,
+          }))
+        : [],
     };
   });
-  
-  return exercises;
+
+  return {
+    ...response.data,
+    content: normalizedExercises,
+  };
 }
 
 export async function getMuscleTags(): Promise<MuscleTagDto[]> {
