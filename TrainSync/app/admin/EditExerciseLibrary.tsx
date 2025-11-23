@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TextInput,
   ScrollView,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -94,9 +95,17 @@ export default function EditExerciseLibrary() {
 
         const data = await getExercises(params);
 
-        setExercises((prev) =>
-          append ? [...prev, ...data.content] : data.content
-        );
+        setExercises((prev) => {
+          if (append) {
+            // Deduplicate by exercise ID to prevent duplicate keys
+            const existingIds = new Set(prev.map((ex) => ex.id));
+            const newExercises = data.content.filter(
+              (ex) => !existingIds.has(ex.id)
+            );
+            return [...prev, ...newExercises];
+          }
+          return data.content;
+        });
         setPage(data.number ?? pageNumber);
         setHasMore(!data.last);
         lastRequestRef.current = null;
@@ -144,10 +153,6 @@ export default function EditExerciseLibrary() {
     const primaryMuscleTags = item.muscleTags.filter(
       (tag) => tag.level === "PRIMARY"
     );
-    const equipmentList =
-      item.equipmentTags.length > 0
-        ? `(${item.equipmentTags.map((tag) => tag.name).join(", ")})`
-        : "(No equipment listed)";
 
     return (
       <TouchableOpacity
@@ -160,31 +165,41 @@ export default function EditExerciseLibrary() {
           }
         })}
       >
-        <Text style={styles.exerciseName}>{item.name}</Text>
-        <View style={styles.exerciseMetaRow}>
-          <View style={styles.tagsContainer}>
-            {primaryMuscleTags.map((tag, index) => {
-              const rotation =
-                index % 3 === 0 ? "-1deg" : index % 3 === 1 ? "1deg" : "0deg";
-              return (
-                <View
-                  key={index}
-                  style={[
-                    styles.tagStickyNote,
-                    styles.tagStickyNotePrimary,
-                    { transform: [{ rotate: rotation }] },
-                  ]}
-                >
-                  <Text style={[styles.tagText, styles.tagTextPrimary]}>
-                    {tag.name}
-                  </Text>
-                </View>
-              );
-            })}
+        <View style={styles.exerciseCardContent}>
+          <View style={styles.exerciseCardLeft}>
+            <Text style={styles.exerciseName}>{item.name}</Text>
+            <View style={styles.exerciseMetaRow}>
+              <View style={styles.tagsContainer}>
+                {primaryMuscleTags.map((tag, index) => {
+                  const rotation =
+                    index % 3 === 0 ? "-1deg" : index % 3 === 1 ? "1deg" : "0deg";
+                  return (
+                    <View
+                      key={index}
+                      style={[
+                        styles.tagStickyNote,
+                        styles.tagStickyNotePrimary,
+                        { transform: [{ rotate: rotation }] },
+                      ]}
+                    >
+                      <Text style={[styles.tagText, styles.tagTextPrimary]}>
+                        {tag.name}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
           </View>
-          <View style={styles.equipmentBox}>
-            <Text style={styles.equipmentText}>{equipmentList}</Text>
-          </View>
+          {item.exercisePictureUrl && (
+            <View style={styles.exerciseImageContainer}>
+              <Image
+                source={{ uri: item.exercisePictureUrl }}
+                style={styles.exerciseImage}
+                resizeMode="cover"
+              />
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -358,7 +373,11 @@ export default function EditExerciseLibrary() {
             <FlatList
               data={exercises}
               renderItem={renderExerciseItem}
-              keyExtractor={(item) => item.id.toString()}
+              keyExtractor={(item, index) => 
+                item.equipmentTag 
+                  ? `${item.id}-${item.equipmentTag.id}` 
+                  : `${item.id}-${index}`
+              }
               contentContainerStyle={styles.exercisesList}
               style={styles.exercisesFlatList}
               showsVerticalScrollIndicator={false}
@@ -565,11 +584,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.2)",
   },
+  exerciseCardContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  exerciseCardLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
   exerciseName: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 12,
+  },
+  exerciseImageContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+    backgroundColor: "rgba(31, 41, 55, 0.8)",
+  },
+  exerciseImage: {
+    width: "100%",
+    height: "100%",
   },
   exerciseMetaRow: {
     flexDirection: "row",
@@ -615,20 +656,6 @@ const styles = StyleSheet.create({
   },
   tagTextSecondary: {
     color: "#78350f",
-  },
-  equipmentBox: {
-    backgroundColor: "#1f2937",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(148, 163, 184, 0.4)",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    marginLeft: 2,
-  },
-  equipmentText: {
-    color: "#e5e7eb",
-    fontSize: 12,
-    fontWeight: "600",
   },
 });
 

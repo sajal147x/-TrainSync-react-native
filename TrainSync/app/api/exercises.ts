@@ -69,6 +69,7 @@ export interface EditExerciseRequest {
   equipmentIds: string[];
   muscleTagIdsPrimary: string[];
   muscleTagIdsSecondary: string[];
+  exercisePictureBase64?: string | null;
 }
 
 export async function createExercise(
