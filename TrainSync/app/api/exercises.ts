@@ -15,7 +15,7 @@ export interface ExerciseDto {
   id: string;
   name: string;
   muscleTags: MuscleTagDto[];
-  equipmentTags: EquipmentTagDto[];
+  equipmentTag?: EquipmentTagDto;
 }
 
 export interface GetExercisesParams {
@@ -93,7 +93,7 @@ export async function getExercises(
 
   // Transform the response to ensure tags are normalized
   const normalizedExercises = response.data.content.map((exercise: any) => {
-    const equipmentTags = exercise.equipmentTags || exercise.equipment_tags || [];
+    const equipmentTag = exercise.equipmentTag || exercise.equipment_tag;
     const muscleTags = exercise.muscleTags || exercise.muscle_tags || [];
 
     return {
@@ -106,12 +106,12 @@ export async function getExercises(
             level: tag.level,
           }))
         : [],
-      equipmentTags: Array.isArray(equipmentTags)
-        ? equipmentTags.map((tag: any) => ({
-            id: tag.id,
-            name: tag.name,
-          }))
-        : [],
+      ...(equipmentTag && {
+        equipmentTag: {
+          id: equipmentTag.id,
+          name: equipmentTag.name,
+        },
+      }),
     };
   });
 

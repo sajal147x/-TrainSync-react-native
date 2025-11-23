@@ -181,10 +181,9 @@ const ExerciseSelection: React.FC = () => {
     const primaryMuscleTags = item.muscleTags.filter(
       (tag) => tag.level === "PRIMARY"
     );
-    const equipmentList =
-      item.equipmentTags.length > 0
-        ? `(${item.equipmentTags.map((tag) => tag.name).join(", ")})`
-        : "(No equipment listed)";
+    const equipmentText = item.equipmentTag
+      ? `(${item.equipmentTag.name})`
+      : "(No equipment listed)";
 
     return (
       <TouchableOpacity
@@ -215,7 +214,7 @@ const ExerciseSelection: React.FC = () => {
             })}
           </View>
           <View style={styles.equipmentBox}>
-            <Text style={styles.equipmentText}>{equipmentList}</Text>
+            <Text style={styles.equipmentText}>{equipmentText}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -483,7 +482,11 @@ const ExerciseSelection: React.FC = () => {
             <FlatList
               data={exercises}
               renderItem={renderExerciseItem}
-              keyExtractor={(item) => item.id.toString()}
+              keyExtractor={(item, index) => 
+                item.equipmentTag 
+                  ? `${item.id}-${item.equipmentTag.id}` 
+                  : `${item.id}-${index}`
+              }
               contentContainerStyle={styles.exercisesList}
               style={styles.exercisesFlatList}
               showsVerticalScrollIndicator={false}
