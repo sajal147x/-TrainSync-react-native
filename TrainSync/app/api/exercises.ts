@@ -16,6 +16,7 @@ export interface ExerciseDto {
   name: string;
   muscleTags: MuscleTagDto[];
   equipmentTag?: EquipmentTagDto;
+  exercisePictureUrl?: string;
 }
 
 export interface GetExercisesParams {
@@ -95,6 +96,7 @@ export async function getExercises(
   const normalizedExercises = response.data.content.map((exercise: any) => {
     const equipmentTag = exercise.equipmentTag || exercise.equipment_tag;
     const muscleTags = exercise.muscleTags || exercise.muscle_tags || [];
+    const exercisePictureUrl = exercise.exercisePictureUrl || exercise.exercise_picture_url;
 
     return {
       id: exercise.id,
@@ -111,6 +113,9 @@ export async function getExercises(
           id: equipmentTag.id,
           name: equipmentTag.name,
         },
+      }),
+      ...(exercisePictureUrl && {
+        exercisePictureUrl: exercisePictureUrl,
       }),
     };
   });

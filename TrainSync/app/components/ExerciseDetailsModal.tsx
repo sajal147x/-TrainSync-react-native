@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Modal,
   Alert,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -112,6 +113,16 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
 
             <View style={styles.contentSection}>
               <Text style={styles.exerciseName}>{exercise.name}</Text>
+
+              {exercise.exercisePictureUrl && (
+                <View style={styles.exerciseImageContainer}>
+                  <Image
+                    source={{ uri: exercise.exercisePictureUrl }}
+                    style={styles.exerciseImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
 
               <View style={styles.musclesSection}>
                 <Text style={styles.sectionLabel}>Muscles Hit</Text>
@@ -255,7 +266,21 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 28,
     fontWeight: "700",
+    marginBottom: 24,
+  },
+  exerciseImageContainer: {
+    width: "100%",
+    height: 200,
+    borderRadius: 16,
+    overflow: "hidden",
     marginBottom: 32,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+    backgroundColor: "rgba(31, 41, 55, 0.6)",
+  },
+  exerciseImage: {
+    width: "100%",
+    height: "100%",
   },
   musclesSection: {
     marginBottom: 32,
