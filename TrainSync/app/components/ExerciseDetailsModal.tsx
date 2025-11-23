@@ -119,7 +119,7 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
                   <Image
                     source={{ uri: exercise.exercisePictureUrl }}
                     style={styles.exerciseImage}
-                    resizeMode="cover"
+                    resizeMode="contain"
                   />
                 </View>
               )}
@@ -270,13 +270,15 @@ const styles = StyleSheet.create({
   },
   exerciseImageContainer: {
     width: "100%",
-    height: 200,
+    aspectRatio: 1,
     borderRadius: 16,
     overflow: "hidden",
     marginBottom: 32,
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.3)",
     backgroundColor: "rgba(31, 41, 55, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   exerciseImage: {
     width: "100%",
