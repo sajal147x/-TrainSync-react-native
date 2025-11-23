@@ -7,6 +7,7 @@ import {
   Modal,
   Alert,
   Image,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -111,7 +112,11 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
               </TouchableOpacity>
             </View>
 
-            <View style={styles.contentSection}>
+            <ScrollView 
+              style={styles.scrollView}
+              contentContainerStyle={styles.contentSection}
+              showsVerticalScrollIndicator={true}
+            >
               <Text style={styles.exerciseName}>{exercise.name}</Text>
 
               {exercise.exercisePictureUrl && (
@@ -208,7 +213,7 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
                   </LinearGradient>
                 </BlurView>
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           </SafeAreaView>
         </View>
       </View>
@@ -258,6 +263,9 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 8,
+  },
+  scrollView: {
+    flex: 1,
   },
   contentSection: {
     padding: 24,

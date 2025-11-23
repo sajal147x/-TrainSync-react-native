@@ -7,6 +7,8 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  Image,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -109,8 +111,22 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
               </TouchableOpacity>
             </View>
 
-            <View style={styles.contentSection}>
+            <ScrollView 
+              style={styles.scrollView}
+              contentContainerStyle={styles.contentSection}
+              showsVerticalScrollIndicator={true}
+            >
               <Text style={styles.exerciseName}>{exercise.name}</Text>
+
+              {exercise.exercisePictureUrl && (
+                <View style={styles.exerciseImageContainer}>
+                  <Image
+                    source={{ uri: exercise.exercisePictureUrl }}
+                    style={styles.exerciseImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              )}
 
               <View style={styles.musclesSection}>
                 <Text style={styles.sectionLabel}>Muscles Hit</Text>
@@ -196,7 +212,7 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
                   </LinearGradient>
                 </BlurView>
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           </SafeAreaView>
         </View>
       </View>
@@ -247,6 +263,9 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 8,
   },
+  scrollView: {
+    flex: 1,
+  },
   contentSection: {
     padding: 24,
   },
@@ -254,7 +273,23 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 28,
     fontWeight: "700",
+    marginBottom: 24,
+  },
+  exerciseImageContainer: {
+    width: "100%",
+    aspectRatio: 1,
+    borderRadius: 16,
+    overflow: "hidden",
     marginBottom: 32,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+    backgroundColor: "rgba(31, 41, 55, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  exerciseImage: {
+    width: "100%",
+    height: "100%",
   },
   musclesSection: {
     marginBottom: 32,

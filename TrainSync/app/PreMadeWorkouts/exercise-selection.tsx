@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TextInput,
   ScrollView,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -174,9 +175,6 @@ const ExerciseSelection: React.FC = () => {
     const primaryMuscleTags = item.muscleTags.filter(
       (tag) => tag.level === "PRIMARY"
     );
-    const equipmentText = item.equipmentTag
-      ? `(${item.equipmentTag.name})`
-      : "(No equipment listed)";
 
     return (
       <TouchableOpacity
@@ -184,31 +182,41 @@ const ExerciseSelection: React.FC = () => {
         onPress={() => handleExercisePress(item)}
         activeOpacity={0.7}
       >
-        <Text style={styles.exerciseName}>{item.name}</Text>
-        <View style={styles.exerciseMetaRow}>
-          <View style={styles.tagsContainer}>
-            {primaryMuscleTags.map((tag, index) => {
-              const rotation =
-                index % 3 === 0 ? "-1deg" : index % 3 === 1 ? "1deg" : "0deg";
-              return (
-                <View
-                  key={index}
-                  style={[
-                    styles.tagStickyNote,
-                    styles.tagStickyNotePrimary,
-                    { transform: [{ rotate: rotation }] },
-                  ]}
-                >
-                  <Text style={[styles.tagText, styles.tagTextPrimary]}>
-                    {tag.name}
-                  </Text>
-                </View>
-              );
-            })}
+        <View style={styles.exerciseCardContent}>
+          <View style={styles.exerciseCardLeft}>
+            <Text style={styles.exerciseName}>{item.name}</Text>
+            <View style={styles.exerciseMetaRow}>
+              <View style={styles.tagsContainer}>
+                {primaryMuscleTags.map((tag, index) => {
+                  const rotation =
+                    index % 3 === 0 ? "-1deg" : index % 3 === 1 ? "1deg" : "0deg";
+                  return (
+                    <View
+                      key={index}
+                      style={[
+                        styles.tagStickyNote,
+                        styles.tagStickyNotePrimary,
+                        { transform: [{ rotate: rotation }] },
+                      ]}
+                    >
+                      <Text style={[styles.tagText, styles.tagTextPrimary]}>
+                        {tag.name}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
           </View>
-          <View style={styles.equipmentBox}>
-            <Text style={styles.equipmentText}>{equipmentText}</Text>
-          </View>
+          {item.exercisePictureUrl && (
+            <View style={styles.exerciseImageContainer}>
+              <Image
+                source={{ uri: item.exercisePictureUrl }}
+                style={styles.exerciseImage}
+                resizeMode="cover"
+              />
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -697,11 +705,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.2)",
   },
+  exerciseCardContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  exerciseCardLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
   exerciseName: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     marginBottom: 12,
+  },
+  exerciseImageContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+    backgroundColor: "rgba(31, 41, 55, 0.8)",
+  },
+  exerciseImage: {
+    width: "100%",
+    height: "100%",
   },
   exerciseMetaRow: {
     flexDirection: "row",
@@ -747,20 +777,6 @@ const styles = StyleSheet.create({
   },
   tagTextSecondary: {
     color: "#78350f",
-  },
-  equipmentBox: {
-    backgroundColor: "#1f2937",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(148, 163, 184, 0.4)",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    marginLeft: 2,
-  },
-  equipmentText: {
-    color: "#e5e7eb",
-    fontSize: 12,
-    fontWeight: "600",
   },
 });
 
