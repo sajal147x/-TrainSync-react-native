@@ -50,23 +50,25 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
       if (workoutId) {
         // Adding exercise to existing workout
         console.log("🔵 Adding exercise to existing workout...");
-        console.log("📝 Request data:", { workoutId, exerciseId: exercise.id });
+        console.log("📝 Request data:", { workoutId, exerciseId: exercise.id, equipmentId: exercise.equipmentTag?.id });
         
         resultWorkoutId = await addExerciseToWorkout({
           workoutId,
           exerciseId: exercise.id,
+          equipmentId: exercise.equipmentTag?.id || "",
         });
         
         console.log("✅ Exercise added to workout! ID:", resultWorkoutId);
       } else {
         // Creating new workout
         console.log("🔵 Starting workout creation...");
-        console.log("📝 Request data:", { workoutName, workoutDate, exerciseId: exercise.id });
+        console.log("📝 Request data:", { workoutName, workoutDate, exerciseId: exercise.id, equipmentId: exercise.equipmentTag?.id });
         
         resultWorkoutId = await createNewWorkout({
           workoutName,
           workoutDate,
           exerciseId: exercise.id,
+          equipmentId: exercise.equipmentTag?.id || "",
         });
         
         console.log("✅ Workout created successfully! ID:", resultWorkoutId);

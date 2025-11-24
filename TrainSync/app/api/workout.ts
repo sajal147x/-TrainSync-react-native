@@ -4,11 +4,13 @@ export interface CreateWorkoutRequest {
   workoutName: string;
   workoutDate: string;
   exerciseId: string;
+  equipmentId: string;
 }
 
 export interface AddExerciseToWorkoutRequest {
   workoutId: string;
   exerciseId: string;
+  equipmentId: string;
 }
 
 export interface SetDto {
