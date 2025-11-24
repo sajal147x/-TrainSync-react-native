@@ -134,3 +134,28 @@ export async function getEquipmentTags(): Promise<EquipmentTagDto[]> {
   return response.data;
 }
 
+export interface EditExerciseTagsDto {
+  id: string;
+  name: string;
+  muscleTags: MuscleTagDto[];
+  equipmentTags: EquipmentTagDto[];
+}
+
+export interface GetExercisesForEditTagsParams {
+  searchText?: string;
+  page?: number;
+  size?: number;
+}
+
+export async function getExercisesForEditTags(
+  params?: GetExercisesForEditTagsParams
+): Promise<PageResponse<EditExerciseTagsDto>> {
+  const response = await client.get<PageResponse<EditExerciseTagsDto>>(
+    "/exercises/fetch-for-edit-exercise-tags",
+    {
+      params,
+    }
+  );
+  return response.data;
+}
+

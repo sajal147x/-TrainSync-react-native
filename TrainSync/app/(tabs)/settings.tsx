@@ -318,6 +318,24 @@ export default function Settings() {
                   </LinearGradient>
                 </BlurView>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.liquidGlassButton}
+                onPress={() => router.push("../admin/EditExerciseTags")}
+                activeOpacity={0.8}
+              >
+                <BlurView intensity={80} tint="dark" style={styles.blurView}>
+                  <LinearGradient
+                    colors={["rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.08)", "rgba(59, 130, 246, 0.15)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientOverlay}
+                  >
+                    <View style={styles.buttonInner}>
+                      <Text style={styles.liquidGlassButtonText}>Edit Exercise Tags</Text>
+                    </View>
+                  </LinearGradient>
+                </BlurView>
+              </TouchableOpacity>
             </>
           )}
 
