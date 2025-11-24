@@ -94,7 +94,15 @@ export default function EditExerciseTags() {
             );
             return [...prev, ...newExercises];
           } else {
-            return data.content;
+            // Deduplicate even on initial load to prevent any duplicate keys
+            const seenIds = new Set<string>();
+            return data.content.filter((ex) => {
+              if (seenIds.has(ex.id)) {
+                return false;
+              }
+              seenIds.add(ex.id);
+              return true;
+            });
           }
         });
 
@@ -155,9 +163,9 @@ export default function EditExerciseTags() {
               <View style={styles.tagsSection}>
                 <Text style={styles.tagsSectionTitle}>Muscle Tags:</Text>
                 <View style={styles.tagsContainer}>
-                  {item.muscleTags.map((tag) => (
+                  {item.muscleTags.map((tag, index) => (
                     <View
-                      key={tag.id}
+                      key={`${item.id}-muscle-${tag.id || 'unknown'}-${index}`}
                       style={[
                         styles.tagStickyNote,
                         tag.level === "PRIMARY"
@@ -185,8 +193,8 @@ export default function EditExerciseTags() {
               <View style={styles.tagsSection}>
                 <Text style={styles.tagsSectionTitle}>Equipment Tags:</Text>
                 <View style={styles.tagsContainer}>
-                  {item.equipmentTags.map((tag) => (
-                    <View key={tag.id} style={styles.equipmentTag}>
+                  {item.equipmentTags.map((tag, index) => (
+                    <View key={`${item.id}-equipment-${tag.id || 'unknown'}-${index}`} style={styles.equipmentTag}>
                       <Text style={styles.equipmentTagText}>{tag.name}</Text>
                     </View>
                   ))}
