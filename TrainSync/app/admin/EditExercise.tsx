@@ -141,22 +141,14 @@ export default function EditExercise() {
     setSaveFeedback(null);
 
     try {
-      // Get current equipment and muscle IDs from exercise
-      const equipmentIds = exercise.equipmentTag ? [exercise.equipmentTag.id] : [];
-      const primaryMuscleIds = exercise.muscleTags
-        .filter((tag) => tag.level === "PRIMARY")
-        .map((tag) => tag.id);
-      const secondaryMuscleIds = exercise.muscleTags
-        .filter((tag) => tag.level === "SECONDARY")
-        .map((tag) => tag.id);
+      // Get equipment ID from exercise
+      const equipmentTagId = exercise.equipmentTag?.id || "";
 
+      // Send exerciseId, equipmentTagId, and pictureBase64 to edit-exercise endpoint
       const updatedExercise = await editExercise({
         exerciseId: exercise.id,
-        name: exerciseName.trim(),
-        equipmentIds: equipmentIds,
-        muscleTagIdsPrimary: primaryMuscleIds,
-        muscleTagIdsSecondary: secondaryMuscleIds,
-        exercisePictureBase64: selectedImageBase64 || null,
+        equipmentTagId: equipmentTagId,
+        pictureBase64: selectedImageBase64 || "",
       });
 
       // Update local state with updated exercise (including new picture URL)

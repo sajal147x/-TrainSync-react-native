@@ -65,11 +65,8 @@ export interface CreateExerciseRequest {
 
 export interface EditExerciseRequest {
   exerciseId: string;
-  name: string;
-  equipmentIds: string[];
-  muscleTagIdsPrimary: string[];
-  muscleTagIdsSecondary: string[];
-  exercisePictureBase64?: string | null;
+  equipmentTagId: string;
+  pictureBase64: string;
 }
 
 export async function createExercise(
@@ -82,7 +79,7 @@ export async function createExercise(
 export async function editExercise(
   payload: EditExerciseRequest
 ): Promise<ExerciseDto> {
-  const response = await client.put<ExerciseDto>("/edit-exercise", payload);
+  const response = await client.post<ExerciseDto>("/edit-exercise", payload);
   return response.data;
 }
 
