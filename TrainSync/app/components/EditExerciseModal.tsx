@@ -390,21 +390,19 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                       </Swipeable>
                     ))
                   )}
+                  
+                  {/* Exercise Picture */}
+                  {exercisePictureUrl && (
+                    <View style={styles.exerciseImageContainer}>
+                      <Image
+                        source={{ uri: exercisePictureUrl }}
+                        style={styles.exerciseImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  )}
                 </ScrollView>
               </GestureHandlerRootView>
-
-              {/* Exercise Picture */}
-              {exercisePictureUrl && (
-                <View style={styles.exercisePictureContainer}>
-                  <View style={styles.exercisePictureWrapper}>
-                    <Image
-                      source={{ uri: exercisePictureUrl }}
-                      style={styles.exercisePicture}
-                      resizeMode="cover"
-                    />
-                  </View>
-                </View>
-              )}
 
               {/* Add Set Button */}
               <View style={styles.buttonContainer}>
@@ -471,26 +469,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#111827",
   },
-  exercisePictureContainer: {
-    alignItems: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-  },
-  exercisePictureWrapper: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  exerciseImageContainer: {
+    width: "100%",
+    aspectRatio: 1,
+    borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: "rgba(59, 130, 246, 0.2)",
-    borderWidth: 2,
-    borderColor: "rgba(59, 130, 246, 0.4)",
-    shadowColor: "#3b82f6",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+    backgroundColor: "rgba(31, 41, 55, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  exercisePicture: {
+  exerciseImage: {
     width: "100%",
     height: "100%",
   },
