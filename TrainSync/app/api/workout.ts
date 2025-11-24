@@ -27,6 +27,7 @@ export interface ExerciseDto {
   preFilledFlag?: string;
   preFilledDate?: string;
   preFilledWorkoutName?: string;
+  exercisePictureUrl?: string;
 }
 
 export interface Workout {

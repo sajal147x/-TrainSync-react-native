@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -34,6 +35,7 @@ interface EditExerciseModalProps {
   preFilledFlag?: string;
   preFilledDate?: string;
   preFilledWorkoutName?: string;
+  exercisePictureUrl?: string;
 }
 
 const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
@@ -45,8 +47,9 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
   preFilledFlag,
   preFilledDate,
   preFilledWorkoutName,
+  exercisePictureUrl,
 }) => {
-  console.log('EditExerciseModal rendered with exerciseId:', exerciseId, 'exerciseName:', exerciseName);
+  console.log('EditExerciseModal rendered with exerciseId:', exerciseId, 'exerciseName:', exerciseName, 'exercisePictureUrl:', exercisePictureUrl);
   
   const [sets, setSets] = useState<Set[]>([]);
   const [savingSetId, setSavingSetId] = useState<string | null>(null);
@@ -390,6 +393,19 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                 </ScrollView>
               </GestureHandlerRootView>
 
+              {/* Exercise Picture */}
+              {exercisePictureUrl && (
+                <View style={styles.exercisePictureContainer}>
+                  <View style={styles.exercisePictureWrapper}>
+                    <Image
+                      source={{ uri: exercisePictureUrl }}
+                      style={styles.exercisePicture}
+                      resizeMode="cover"
+                    />
+                  </View>
+                </View>
+              )}
+
               {/* Add Set Button */}
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
@@ -455,10 +471,34 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#111827",
   },
+  exercisePictureContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+  },
+  exercisePictureWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    overflow: "hidden",
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
+    borderWidth: 2,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  exercisePicture: {
+    width: "100%",
+    height: "100%",
+  },
   modalTitle: {
     color: "#fff",
     fontSize: 22,
     fontWeight: "700",
+    flex: 1,
   },
   closeButton: {
     padding: 8,

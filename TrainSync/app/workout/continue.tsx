@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -24,7 +25,7 @@ const ContinueWorkout: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [loadingSets, setLoadingSets] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<{ name: string; exerciseId: string; index: number; sets: any[]; preFilledFlag?: string; preFilledDate?: string; preFilledWorkoutName?: string } | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<{ name: string; exerciseId: string; index: number; sets: any[]; preFilledFlag?: string; preFilledDate?: string; preFilledWorkoutName?: string; exercisePictureUrl?: string } | null>(null);
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -88,9 +89,16 @@ const ContinueWorkout: React.FC = () => {
             {workout?.exercises && workout.exercises.length > 0 ? (
               workout.exercises.map((exercise, index) => (
                 <View key={index} style={styles.exerciseItem}>
-                  <View style={styles.exerciseNumber}>
-                    <Text style={styles.exerciseNumberText}>{index + 1}</Text>
-                  </View>
+                  {exercise.exercisePictureUrl ? (
+                    <Image
+                      source={{ uri: exercise.exercisePictureUrl }}
+                      style={styles.exerciseImage}
+                    />
+                  ) : (
+                    <View style={styles.exerciseNumber}>
+                      <Text style={styles.exerciseNumberText}>{index + 1}</Text>
+                    </View>
+                  )}
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
                   <TouchableOpacity
                     onPress={async () => {
@@ -105,6 +113,7 @@ const ContinueWorkout: React.FC = () => {
                           preFilledFlag: exerciseData.preFilledFlag,
                           preFilledDate: exerciseData.preFilledDate,
                           preFilledWorkoutName: exerciseData.preFilledWorkoutName,
+                          exercisePictureUrl: exerciseData.exercisePictureUrl,
                         });
                         setEditModalVisible(true);
                       } catch (error) {
@@ -118,6 +127,7 @@ const ContinueWorkout: React.FC = () => {
                           preFilledFlag: exercise.preFilledFlag,
                           preFilledDate: exercise.preFilledDate,
                           preFilledWorkoutName: exercise.preFilledWorkoutName,
+                          exercisePictureUrl: exercise.exercisePictureUrl,
                         });
                         setEditModalVisible(true);
                       } finally {
@@ -192,6 +202,7 @@ const ContinueWorkout: React.FC = () => {
         preFilledFlag={selectedExercise?.preFilledFlag}
         preFilledDate={selectedExercise?.preFilledDate}
         preFilledWorkoutName={selectedExercise?.preFilledWorkoutName}
+        exercisePictureUrl={selectedExercise?.exercisePictureUrl}
       />
     </SafeAreaView>
   );
@@ -268,6 +279,12 @@ const styles = StyleSheet.create({
     color: "#3b82f6",
     fontSize: 14,
     fontWeight: "700",
+  },
+  exerciseImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
   },
   exerciseName: {
     color: "#fff",
