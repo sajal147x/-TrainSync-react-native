@@ -115,3 +115,11 @@ export async function deleteSet(
   );
 }
 
+export async function getSets(exerciseId: string): Promise<ExerciseDto> {
+  const response = await client.get<ExerciseDto>(
+    `/get-sets?exerciseId=${exerciseId}`
+  );
+  console.log('getSets response:', response.data);
+  return response.data;
+}
+

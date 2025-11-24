@@ -13,7 +13,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { getWorkout, Workout } from "../api/workout";
+import { getWorkout, getSets, Workout, ExerciseDto } from "../api/workout";
 import EditExerciseModal from "../components/EditExerciseModal";
 
 const ContinueWorkout: React.FC = () => {
@@ -23,6 +23,7 @@ const ContinueWorkout: React.FC = () => {
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [loadingSets, setLoadingSets] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<{ name: string; exerciseId: string; index: number; sets: any[]; preFilledFlag?: string; preFilledDate?: string; preFilledWorkoutName?: string } | null>(null);
 
   useEffect(() => {
@@ -92,21 +93,45 @@ const ContinueWorkout: React.FC = () => {
                   </View>
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
                   <TouchableOpacity
-                    onPress={() => {
-                      setSelectedExercise({ 
-                        name: exercise.name, 
-                        exerciseId: exercise.id, 
-                        index,
-                        sets: exercise.sets || [],
-                        preFilledFlag: exercise.preFilledFlag,
-                        preFilledDate: exercise.preFilledDate,
-                        preFilledWorkoutName: exercise.preFilledWorkoutName,
-                      });
-                      setEditModalVisible(true);
+                    onPress={async () => {
+                      setLoadingSets(true);
+                      try {
+                        const exerciseData = await getSets(exercise.id);
+                        setSelectedExercise({ 
+                          name: exerciseData.name, 
+                          exerciseId: exerciseData.id, 
+                          index,
+                          sets: exerciseData.sets || [],
+                          preFilledFlag: exerciseData.preFilledFlag,
+                          preFilledDate: exerciseData.preFilledDate,
+                          preFilledWorkoutName: exerciseData.preFilledWorkoutName,
+                        });
+                        setEditModalVisible(true);
+                      } catch (error) {
+                        console.error("Error fetching sets:", error);
+                        // Fallback to existing exercise data if API call fails
+                        setSelectedExercise({ 
+                          name: exercise.name, 
+                          exerciseId: exercise.id, 
+                          index,
+                          sets: exercise.sets || [],
+                          preFilledFlag: exercise.preFilledFlag,
+                          preFilledDate: exercise.preFilledDate,
+                          preFilledWorkoutName: exercise.preFilledWorkoutName,
+                        });
+                        setEditModalVisible(true);
+                      } finally {
+                        setLoadingSets(false);
+                      }
                     }}
                     style={styles.editButton}
+                    disabled={loadingSets}
                   >
-                    <Ionicons name="create-outline" size={20} color="#3b82f6" />
+                    {loadingSets ? (
+                      <ActivityIndicator size="small" color="#3b82f6" />
+                    ) : (
+                      <Ionicons name="create-outline" size={20} color="#3b82f6" />
+                    )}
                   </TouchableOpacity>
                 </View>
               ))
