@@ -158,7 +158,7 @@ export default function EditExerciseLibrary() {
       <TouchableOpacity
         style={styles.exerciseCard}
         activeOpacity={0.7}
-        onPress={() => router.push({
+        onPress={() => router.replace({
           pathname: "./EditExercise",
           params: {
             exerciseData: JSON.stringify(item)

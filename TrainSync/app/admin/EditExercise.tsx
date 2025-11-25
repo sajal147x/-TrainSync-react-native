@@ -120,6 +120,10 @@ export default function EditExercise() {
     }
   };
 
+  const handleBack = () => {
+    router.replace("./EditExerciseLibrary");
+  };
+
   const handleSave = async () => {
     if (!exercise || !exercise.id) {
       setSaveFeedback({
@@ -165,7 +169,7 @@ export default function EditExercise() {
 
       // Navigate back after a short delay
       setTimeout(() => {
-        router.back();
+        handleBack();
       }, 1500);
     } catch (error) {
       console.error("Failed to update exercise:", error);
@@ -183,7 +187,7 @@ export default function EditExercise() {
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={handleBack}
             style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={24} color="#3b82f6" />
@@ -202,7 +206,7 @@ export default function EditExercise() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="#3b82f6" />
