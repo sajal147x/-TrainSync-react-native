@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
@@ -132,9 +133,16 @@ const ContinuePreMadeWorkout: React.FC = () => {
                 .sort((a, b) => (a.exerciseOrder || 0) - (b.exerciseOrder || 0))
                 .map((exercise, index) => (
                 <View key={exercise.id} style={styles.exerciseItem}>
-                  <View style={styles.exerciseNumber}>
-                    <Text style={styles.exerciseNumberText}>{exercise.exerciseOrder || index + 1}</Text>
-                  </View>
+                  {exercise.exercisePictureUrl ? (
+                    <Image
+                      source={{ uri: exercise.exercisePictureUrl }}
+                      style={styles.exerciseImage}
+                    />
+                  ) : (
+                    <View style={styles.exerciseNumber}>
+                      <Text style={styles.exerciseNumberText}>{exercise.exerciseOrder || index + 1}</Text>
+                    </View>
+                  )}
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
                   <TouchableOpacity
                     style={styles.editButton}
@@ -296,6 +304,12 @@ const styles = StyleSheet.create({
     color: "#3b82f6",
     fontSize: 14,
     fontWeight: "700",
+  },
+  exerciseImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
   },
   exerciseName: {
     color: "#fff",

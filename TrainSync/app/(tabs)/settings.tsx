@@ -151,12 +151,10 @@ export default function Settings() {
     );
   }
 
-  // Determine which image to display with cache-busting query parameter
+  // Determine which image to display
   const displayImage = selectedImage 
     ? selectedImage 
-    : user?.profilePictureUrl 
-      ? `${user.profilePictureUrl}?t=${Date.now()}` 
-      : null;
+    : user?.profilePictureUrl || null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -182,11 +180,10 @@ export default function Settings() {
           <View style={styles.profileCircle}>
             {displayImage ? (
               <Image
-                key={displayImage} // Force re-render when URL changes
                 source={{ uri: displayImage }}
                 style={styles.profileImage}
                 contentFit="cover"
-                cachePolicy="memory" // Disable caching to always fetch fresh image
+                cachePolicy="disk"
               />
             ) : null}
           </View>
@@ -318,24 +315,7 @@ export default function Settings() {
                   </LinearGradient>
                 </BlurView>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.liquidGlassButton}
-                onPress={() => router.push("../admin/EditExerciseTags")}
-                activeOpacity={0.8}
-              >
-                <BlurView intensity={80} tint="dark" style={styles.blurView}>
-                  <LinearGradient
-                    colors={["rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.08)", "rgba(59, 130, 246, 0.15)"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.gradientOverlay}
-                  >
-                    <View style={styles.buttonInner}>
-                      <Text style={styles.liquidGlassButtonText}>Edit Exercise Tags</Text>
-                    </View>
-                  </LinearGradient>
-                </BlurView>
-              </TouchableOpacity>
+   
             </>
           )}
 

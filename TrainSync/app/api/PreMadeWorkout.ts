@@ -10,6 +10,7 @@ export interface PreMadeExerciseDto {
   id: string;
   name: string;
   exerciseOrder?: number;
+  exercisePictureUrl?: string;
 }
 
 export interface PreMadeWorkout {
