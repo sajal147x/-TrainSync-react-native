@@ -185,7 +185,7 @@ const ContinuePreMadeWorkout: React.FC = () => {
 
         <TouchableOpacity
           style={styles.doneButton}
-          onPress={() => router.back()}
+          onPress={() => router.push("/(tabs)/home")}
         >
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>

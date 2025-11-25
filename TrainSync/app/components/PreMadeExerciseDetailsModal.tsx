@@ -143,34 +143,23 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
 
               <View style={styles.musclesSection}>
                 <Text style={styles.sectionLabel}>Muscles Hit</Text>
-                <View style={styles.tagsContainer}>
-                  {exercise.muscleTags.map((tag, index) => {
-                    const rotation =
-                      index % 3 === 0 ? "-1deg" : index % 3 === 1 ? "1deg" : "0deg";
-                    const isPrimary = tag.level === "PRIMARY";
-                    const isSecondary = tag.level === "SECONDARY";
-                    return (
-                      <View
-                        key={index}
-                        style={[
-                          styles.tagStickyNote,
-                          isPrimary && styles.tagStickyNotePrimary,
-                          isSecondary && styles.tagStickyNoteSecondary,
-                          { transform: [{ rotate: rotation }] },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.tagText,
-                            isPrimary && styles.tagTextPrimary,
-                            isSecondary && styles.tagTextSecondary,
-                          ]}
-                        >
-                          {tag.name}
-                        </Text>
-                      </View>
-                    );
-                  })}
+                <View style={styles.musclesList}>
+                  {exercise.muscleTags.filter((tag) => tag.level === "PRIMARY").length > 0 && (
+                    <Text style={styles.muscleItem}>
+                      Primary: {exercise.muscleTags
+                        .filter((tag) => tag.level === "PRIMARY")
+                        .map((tag) => tag.name)
+                        .join(", ")}
+                    </Text>
+                  )}
+                  {exercise.muscleTags.filter((tag) => tag.level === "SECONDARY").length > 0 && (
+                    <Text style={styles.muscleItem}>
+                      Secondary: {exercise.muscleTags
+                        .filter((tag) => tag.level === "SECONDARY")
+                        .map((tag) => tag.name)
+                        .join(", ")}
+                    </Text>
+                  )}
                 </View>
               </View>
 
@@ -315,42 +304,14 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1.2,
   },
-  tagsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
+  musclesList: {
+    gap: 8,
   },
-  tagStickyNote: {
-    backgroundColor: "#fef3c7",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#fde68a",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  tagStickyNotePrimary: {
-    backgroundColor: "#dcfce7",
-    borderColor: "#86efac",
-  },
-  tagStickyNoteSecondary: {
-    backgroundColor: "#fef3c7",
-    borderColor: "#fde68a",
-  },
-  tagText: {
-    color: "#78350f",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  tagTextPrimary: {
-    color: "#166534",
-  },
-  tagTextSecondary: {
-    color: "#78350f",
+  muscleItem: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 4,
   },
   equipmentSection: {
     marginBottom: 32,

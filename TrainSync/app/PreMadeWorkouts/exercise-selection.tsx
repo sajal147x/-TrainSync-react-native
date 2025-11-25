@@ -186,26 +186,11 @@ const ExerciseSelection: React.FC = () => {
           <View style={styles.exerciseCardLeft}>
             <Text style={styles.exerciseName}>{item.name}</Text>
             <View style={styles.exerciseMetaRow}>
-              <View style={styles.tagsContainer}>
-                {primaryMuscleTags.map((tag, index) => {
-                  const rotation =
-                    index % 3 === 0 ? "-1deg" : index % 3 === 1 ? "1deg" : "0deg";
-                  return (
-                    <View
-                      key={index}
-                      style={[
-                        styles.tagStickyNote,
-                        styles.tagStickyNotePrimary,
-                        { transform: [{ rotate: rotation }] },
-                      ]}
-                    >
-                      <Text style={[styles.tagText, styles.tagTextPrimary]}>
-                        {tag.name}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
+              {primaryMuscleTags.length > 0 && (
+                <Text style={styles.muscleText}>
+                  {primaryMuscleTags.map((tag) => tag.name.toUpperCase()).join(", ")}
+                </Text>
+              )}
             </View>
           </View>
           {item.exercisePictureUrl && (
@@ -739,44 +724,12 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 4,
   },
-  tagsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 2,
-    flexShrink: 1,
-    flexGrow: 0,
-  },
-  tagStickyNote: {
-    backgroundColor: "#fef3c7",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#fde68a",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  tagStickyNotePrimary: {
-    backgroundColor: "#dcfce7",
-    borderColor: "#86efac",
-  },
-  tagStickyNoteSecondary: {
-    backgroundColor: "#fef3c7",
-    borderColor: "#fde68a",
-  },
-  tagText: {
-    color: "#78350f",
+  muscleText: {
+    color: "#9ca3af",
     fontSize: 12,
     fontWeight: "600",
-  },
-  tagTextPrimary: {
-    color: "#166534",
-  },
-  tagTextSecondary: {
-    color: "#78350f",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });
 
