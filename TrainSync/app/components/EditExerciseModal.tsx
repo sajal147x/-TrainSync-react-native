@@ -53,6 +53,7 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
   
   const [sets, setSets] = useState<Set[]>([]);
   const [savingSetId, setSavingSetId] = useState<string | null>(null);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
   const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
 
   // Format date from ISO format to "Nov 20, 2025" format
@@ -270,7 +271,25 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
             <SafeAreaView edges={["top", "bottom"]} style={styles.modalSafeArea}>
               {/* Header */}
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{exerciseName}</Text>
+                <View style={styles.headerLeft}>
+                  {exercisePictureUrl && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setImageModalVisible(true);
+                      }}
+                      activeOpacity={0.8}
+                      style={styles.headerImageContainer}
+                    >
+                      <Image
+                        source={{ uri: exercisePictureUrl }}
+                        style={styles.headerImage}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
+                  )}
+                  <Text style={styles.modalTitle}>{exerciseName}</Text>
+                </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                   <Ionicons name="close" size={24} color="#fff" />
                 </TouchableOpacity>
@@ -390,17 +409,6 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
                       </Swipeable>
                     ))
                   )}
-                  
-                  {/* Exercise Picture */}
-                  {exercisePictureUrl && (
-                    <View style={styles.exerciseImageContainer}>
-                      <Image
-                        source={{ uri: exercisePictureUrl }}
-                        style={styles.exerciseImage}
-                        resizeMode="contain"
-                      />
-                    </View>
-                  )}
                 </ScrollView>
               </GestureHandlerRootView>
 
@@ -426,6 +434,37 @@ const EditExerciseModal: React.FC<EditExerciseModalProps> = ({
           </View>
         </KeyboardAvoidingView>
       </View>
+
+      {/* Enlarged Image Modal */}
+      <Modal
+        visible={imageModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View style={styles.imageModalOverlay}>
+          <TouchableOpacity
+            style={styles.imageModalBackdrop}
+            activeOpacity={1}
+            onPress={() => setImageModalVisible(false)}
+          />
+          <View style={styles.imageModalContent}>
+            <TouchableOpacity
+              style={styles.imageModalCloseButton}
+              onPress={() => setImageModalVisible(false)}
+            >
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+            {exercisePictureUrl && (
+              <Image
+                source={{ uri: exercisePictureUrl }}
+                style={styles.enlargedImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 };
@@ -469,19 +508,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#111827",
   },
-  exerciseImageContainer: {
-    width: "100%",
-    aspectRatio: 1,
-    borderRadius: 16,
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 12,
+  },
+  headerImageContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
     overflow: "hidden",
-    marginBottom: 24,
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.3)",
     backgroundColor: "rgba(31, 41, 55, 0.6)",
-    justifyContent: "center",
-    alignItems: "center",
   },
-  exerciseImage: {
+  headerImage: {
     width: "100%",
     height: "100%",
   },
@@ -490,6 +532,35 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     flex: 1,
+  },
+  imageModalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+  },
+  imageModalContent: {
+    width: "90%",
+    height: "80%",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  imageModalCloseButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 20,
+    padding: 8,
+  },
+  enlargedImage: {
+    width: "100%",
+    height: "100%",
   },
   closeButton: {
     padding: 8,
