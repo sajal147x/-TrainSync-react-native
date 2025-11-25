@@ -11,6 +11,7 @@ export interface AddExerciseToWorkoutRequest {
   workoutId: string;
   exerciseId: string;
   equipmentId: string;
+  exerciseOrder: number;
 }
 
 export interface SetDto {
@@ -28,6 +29,7 @@ export interface ExerciseDto {
   preFilledDate?: string;
   preFilledWorkoutName?: string;
   exercisePictureUrl?: string;
+  exerciseOrder?: number;
 }
 
 export interface Workout {

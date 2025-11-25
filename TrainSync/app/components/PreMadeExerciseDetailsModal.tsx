@@ -16,7 +16,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { ExerciseDto } from "../api/exercises";
-import { createPreMadeRoutine, addExerciseToPreMadeWorkout } from "../api/PreMadeWorkout";
+import { createPreMadeRoutine, addExerciseToPreMadeWorkout, getPreMadeWorkout } from "../api/PreMadeWorkout";
 
 interface PreMadeExerciseDetailsModalProps {
   visible: boolean;
@@ -49,10 +49,23 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
     try {
       if (preMadeWorkoutId) {
         // Adding to existing workout
+        // Fetch current workout to determine next exercise order
+        const currentWorkout = await getPreMadeWorkout(preMadeWorkoutId);
+        // Calculate next order: use the maximum of (exercise count, max exerciseOrder) + 1
+        let nextExerciseOrder = 1;
+        if (currentWorkout.exercises.length > 0) {
+          const maxOrder = currentWorkout.exercises
+            .map(e => e.exerciseOrder || 0)
+            .reduce((max, order) => Math.max(max, order), 0);
+          // Use the higher of: exercise count or max order, then add 1
+          nextExerciseOrder = Math.max(currentWorkout.exercises.length, maxOrder) + 1;
+        }
+        
         await addExerciseToPreMadeWorkout({
           preMadeWorkoutId,
           exerciseId: exercise.id,
           equipmentId: exercise.equipmentTag?.id || "",
+          exerciseOrder: nextExerciseOrder,
         });
         
         onClose();

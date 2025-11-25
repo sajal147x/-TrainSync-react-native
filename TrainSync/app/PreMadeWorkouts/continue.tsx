@@ -128,10 +128,12 @@ const ContinuePreMadeWorkout: React.FC = () => {
           <Text style={styles.sectionTitle}>Exercises</Text>
           <ScrollView style={styles.exercisesList} showsVerticalScrollIndicator={false}>
             {workout?.exercises && workout.exercises.length > 0 ? (
-              workout.exercises.map((exercise, index) => (
+              [...workout.exercises]
+                .sort((a, b) => (a.exerciseOrder || 0) - (b.exerciseOrder || 0))
+                .map((exercise, index) => (
                 <View key={exercise.id} style={styles.exerciseItem}>
                   <View style={styles.exerciseNumber}>
-                    <Text style={styles.exerciseNumberText}>{index + 1}</Text>
+                    <Text style={styles.exerciseNumberText}>{exercise.exerciseOrder || index + 1}</Text>
                   </View>
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
                   <TouchableOpacity

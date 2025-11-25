@@ -59,23 +59,47 @@ const Home: React.FC = () => {
           </View>
           <View style={{ backgroundColor: "#161b22", padding: 20, borderRadius: 12, marginBottom: 20 }}>
             <Text style={{ color: "#8b949e", fontSize: 14, marginBottom: 16 }}>
-              Muscle Group Stats (Last 30 Days)
+              Muscle Group Stats (Last 7 Days)
             </Text>
             {muscleGroupStats.length === 0 ? (
               <Text style={{ color: "#8b949e", fontSize: 14 }}>
                 No data available
               </Text>
             ) : (
-              muscleGroupStats.map((stat, index) => (
-                <View key={index} style={{ marginBottom: index < muscleGroupStats.length - 1 ? 16 : 0 }}>
-                  <Text style={{ color: "#fff", fontSize: 18, fontWeight: "600", marginBottom: 4 }}>
-                    {stat.muscleGroup}
-                  </Text>
-                  <Text style={{ color: "#8b949e", fontSize: 14 }}>
-                    Times Worked: {stat.numberOfTimesWorked}
-                  </Text>
-                </View>
-              ))
+              <View>
+                {(() => {
+                  const maxCount = Math.max(...muscleGroupStats.map(stat => stat.numberOfTimesWorked), 1);
+                  return muscleGroupStats.map((stat, index) => {
+                    const barWidth = (stat.numberOfTimesWorked / maxCount) * 100;
+                    return (
+                      <View key={index} style={{ marginBottom: index < muscleGroupStats.length - 1 ? 20 : 0 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+                          <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", width: 120 }}>
+                            {stat.muscleGroup}
+                          </Text>
+                          <View style={{ flex: 1, height: 24, backgroundColor: "#0d1117", borderRadius: 4, overflow: "hidden" }}>
+                            <View
+                              style={{
+                                height: "100%",
+                                width: `${barWidth}%`,
+                                backgroundColor: "#1f6feb",
+                                borderRadius: 4,
+                                justifyContent: "center",
+                                alignItems: "flex-end",
+                                paddingRight: 8,
+                              }}
+                            >
+                              <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>
+                                {stat.numberOfTimesWorked}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  });
+                })()}
+              </View>
             )}
           </View>
         </ScrollView>

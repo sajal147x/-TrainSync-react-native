@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { ExerciseDto, EquipmentTagDto } from "../api/exercises";
-import { createNewWorkout, addExerciseToWorkout } from "../api/workout";
+import { createNewWorkout, addExerciseToWorkout, getWorkout } from "../api/workout";
 
 interface ExerciseDetailsModalProps {
   visible: boolean;
@@ -50,17 +50,25 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
       if (workoutId) {
         // Adding exercise to existing workout
         console.log("🔵 Adding exercise to existing workout...");
-        console.log("📝 Request data:", { workoutId, exerciseId: exercise.id, equipmentId: exercise.equipmentTag?.id });
+        
+        // Fetch current workout to determine next exercise order
+        const currentWorkout = await getWorkout(workoutId);
+        const nextExerciseOrder = currentWorkout.exercises.length > 0 
+          ? Math.max(...currentWorkout.exercises.map(e => e.exerciseOrder || 0)) + 1
+          : 1;
+        
+        console.log("📝 Request data:", { workoutId, exerciseId: exercise.id, equipmentId: exercise.equipmentTag?.id, exerciseOrder: nextExerciseOrder });
         
         resultWorkoutId = await addExerciseToWorkout({
           workoutId,
           exerciseId: exercise.id,
           equipmentId: exercise.equipmentTag?.id || "",
+          exerciseOrder: nextExerciseOrder,
         });
         
         console.log("✅ Exercise added to workout! ID:", resultWorkoutId);
       } else {
-        // Creating new workout
+        // Creating new workout - first exercise has order 1
         console.log("🔵 Starting workout creation...");
         console.log("📝 Request data:", { workoutName, workoutDate, exerciseId: exercise.id, equipmentId: exercise.equipmentTag?.id });
         

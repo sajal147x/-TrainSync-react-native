@@ -9,6 +9,7 @@ export interface CreatePreMadeRoutineRequest {
 export interface PreMadeExerciseDto {
   id: string;
   name: string;
+  exerciseOrder?: number;
 }
 
 export interface PreMadeWorkout {
@@ -61,6 +62,7 @@ export interface AddExerciseToPreMadeWorkoutRequest {
   preMadeWorkoutId: string;
   exerciseId: string;
   equipmentId: string;
+  exerciseOrder: number;
 }
 
 /**
