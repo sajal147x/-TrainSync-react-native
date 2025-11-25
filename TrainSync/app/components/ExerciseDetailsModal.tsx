@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { ExerciseDto, EquipmentTagDto } from "../api/exercises";
-import { createNewWorkout, addExerciseToWorkout, getWorkout } from "../api/workout";
+import { createNewWorkout, addExerciseToWorkout, getWorkout, changeExerciseInWorkout } from "../api/workout";
 
 interface ExerciseDetailsModalProps {
   visible: boolean;
@@ -25,6 +25,8 @@ interface ExerciseDetailsModalProps {
   workoutName: string;
   workoutDate: string;
   workoutId?: string; // Optional - if provided, we're adding to existing workout
+  mode?: "add" | "switch"; // Mode: "add" (default) or "switch"
+  currentExerciseId?: string; // Required when mode is "switch" - the current workout exercise ID
 }
 
 const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
@@ -35,6 +37,8 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
   workoutName,
   workoutDate,
   workoutId,
+  mode = "add",
+  currentExerciseId,
 }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -45,56 +49,94 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
     try {
       setIsLoading(true);
       
-      let resultWorkoutId: string;
-      
-      if (workoutId) {
-        // Adding exercise to existing workout
-        console.log("🔵 Adding exercise to existing workout...");
-        
-        // Fetch current workout to determine next exercise order
-        const currentWorkout = await getWorkout(workoutId);
-        const nextExerciseOrder = currentWorkout.exercises.length > 0 
-          ? Math.max(...currentWorkout.exercises.map(e => e.exerciseOrder || 0)) + 1
-          : 1;
-        
-        console.log("📝 Request data:", { workoutId, exerciseId: exercise.id, equipmentId: exercise.equipmentTag?.id, exerciseOrder: nextExerciseOrder });
-        
-        resultWorkoutId = await addExerciseToWorkout({
-          workoutId,
-          exerciseId: exercise.id,
-          equipmentId: exercise.equipmentTag?.id || "",
-          exerciseOrder: nextExerciseOrder,
-        });
-        
-        console.log("✅ Exercise added to workout! ID:", resultWorkoutId);
-      } else {
-        // Creating new workout - first exercise has order 1
-        console.log("🔵 Starting workout creation...");
-        console.log("📝 Request data:", { workoutName, workoutDate, exerciseId: exercise.id, equipmentId: exercise.equipmentTag?.id });
-        
-        resultWorkoutId = await createNewWorkout({
-          workoutName,
-          workoutDate,
-          exerciseId: exercise.id,
-          equipmentId: exercise.equipmentTag?.id || "",
-        });
-        
-        console.log("✅ Workout created successfully! ID:", resultWorkoutId);
-      }
-      
-      onAddToWorkout(exercise);
-      onClose();
-      
-      // Navigate to continue page with the workout ID
-      router.push({
-        pathname: "/workout/continue",
-        params: {
-          workoutId: resultWorkoutId,
+      if (mode === "switch") {
+        // Switching exercise in workout
+        if (!workoutId || !currentExerciseId) {
+          Alert.alert("Error", "Missing required parameters for switching exercise.");
+          return;
         }
-      });
+        
+        console.log("🔄 Switching exercise in workout...");
+        console.log("📝 Request data:", { 
+          exerciseId: currentExerciseId, 
+          newExerciseLibraryId: exercise.id, 
+          workoutId 
+        });
+        
+        await changeExerciseInWorkout({
+          exerciseId: currentExerciseId,
+          newExerciseLibraryId: exercise.id,
+          workoutId,
+        });
+        
+        console.log("✅ Exercise switched successfully!");
+        
+        onAddToWorkout(exercise);
+        onClose();
+        
+        // Navigate back to continue page
+        router.push({
+          pathname: "/workout/continue",
+          params: {
+            workoutId: workoutId,
+          }
+        });
+      } else {
+        // Adding exercise to workout (original logic)
+        let resultWorkoutId: string;
+        
+        if (workoutId) {
+          // Adding exercise to existing workout
+          console.log("🔵 Adding exercise to existing workout...");
+          
+          // Fetch current workout to determine next exercise order
+          const currentWorkout = await getWorkout(workoutId);
+          const nextExerciseOrder = currentWorkout.exercises.length > 0 
+            ? Math.max(...currentWorkout.exercises.map(e => e.exerciseOrder || 0)) + 1
+            : 1;
+          
+          console.log("📝 Request data:", { workoutId, exerciseId: exercise.id, equipmentId: exercise.equipmentTag?.id, exerciseOrder: nextExerciseOrder });
+          
+          resultWorkoutId = await addExerciseToWorkout({
+            workoutId,
+            exerciseId: exercise.id,
+            equipmentId: exercise.equipmentTag?.id || "",
+            exerciseOrder: nextExerciseOrder,
+          });
+          
+          console.log("✅ Exercise added to workout! ID:", resultWorkoutId);
+        } else {
+          // Creating new workout - first exercise has order 1
+          console.log("🔵 Starting workout creation...");
+          console.log("📝 Request data:", { workoutName, workoutDate, exerciseId: exercise.id, equipmentId: exercise.equipmentTag?.id });
+          
+          resultWorkoutId = await createNewWorkout({
+            workoutName,
+            workoutDate,
+            exerciseId: exercise.id,
+            equipmentId: exercise.equipmentTag?.id || "",
+          });
+          
+          console.log("✅ Workout created successfully! ID:", resultWorkoutId);
+        }
+        
+        onAddToWorkout(exercise);
+        onClose();
+        
+        // Navigate to continue page with the workout ID
+        router.push({
+          pathname: "/workout/continue",
+          params: {
+            workoutId: resultWorkoutId,
+          }
+        });
+      }
     } catch (error) {
-      console.error("❌ Error in handleAddToWorkout:", error);
-      Alert.alert("Error", "Failed to add exercise to workout. Please try again.");
+      console.error("❌ Error:", error);
+      const errorMessage = mode === "switch" 
+        ? "Failed to switch exercise. Please try again."
+        : "Failed to add exercise to workout. Please try again.";
+      Alert.alert("Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -201,11 +243,19 @@ const ExerciseDetailsModal: React.FC<ExerciseDetailsModalProps> = ({
                   >
                     <View style={styles.buttonInner}>
                       {isLoading ? (
-                        <Text style={styles.addButtonText}>Adding...</Text>
+                        <Text style={styles.addButtonText}>
+                          {mode === "switch" ? "Switching..." : "Adding..."}
+                        </Text>
                       ) : (
                         <>
-                          <Ionicons name="add-circle" size={24} color="#fff" />
-                          <Text style={styles.addButtonText}>Add Exercise to Workout</Text>
+                          <Ionicons 
+                            name={mode === "switch" ? "swap-horizontal" : "add-circle"} 
+                            size={24} 
+                            color="#fff" 
+                          />
+                          <Text style={styles.addButtonText}>
+                            {mode === "switch" ? "Switch Exercise" : "Add Exercise to Workout"}
+                          </Text>
                         </>
                       )}
                     </View>

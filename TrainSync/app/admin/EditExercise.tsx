@@ -190,9 +190,10 @@ export default function EditExercise() {
             onPress={handleBack}
             style={styles.backButton}
           >
-            <Ionicons name="arrow-back" size={24} color="#3b82f6" />
+            <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.title}>Edit Exercise</Text>
+          <View style={styles.placeholder} />
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#3b82f6" />
@@ -209,9 +210,10 @@ export default function EditExercise() {
           onPress={handleBack}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="#3b82f6" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.title}>Edit Exercise</Text>
+        <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content}>
@@ -306,18 +308,23 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 24,
   },
   backButton: {
     padding: 8,
-    marginRight: 12,
   },
   title: {
     flex: 1,
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: "700",
     color: "#fff",
+    textAlign: "center",
+    marginHorizontal: 12,
+  },
+  placeholder: {
+    width: 40,
   },
   content: {
     flex: 1,

@@ -128,3 +128,18 @@ export async function getSets(exerciseId: string): Promise<ExerciseDto> {
   return response.data;
 }
 
+export interface ChangeExerciseInWorkoutRequest {
+  exerciseId: string; // Current workout exercise ID
+  newExerciseLibraryId: string; // New exercise library ID
+  workoutId: string; // Workout ID
+}
+
+export async function changeExerciseInWorkout(
+  request: ChangeExerciseInWorkoutRequest
+): Promise<void> {
+  await client.post(
+    "/change-exercise-in-workout",
+    request
+  );
+}
+

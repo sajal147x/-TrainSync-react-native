@@ -14,8 +14,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { getWorkout, getSets, Workout, ExerciseDto } from "../api/workout";
-import EditExerciseModal from "../components/EditExerciseModal";
+import { getWorkout, Workout, ExerciseDto } from "../api/workout";
 
 const ContinueWorkout: React.FC = () => {
   const router = useRouter();
@@ -23,9 +22,6 @@ const ContinueWorkout: React.FC = () => {
   const workoutId = params.workoutId as string;
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [loadingSets, setLoadingSets] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<{ name: string; exerciseId: string; index: number; sets: any[]; preFilledFlag?: string; preFilledDate?: string; preFilledWorkoutName?: string; exercisePictureUrl?: string } | null>(null);
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -103,47 +99,23 @@ const ContinueWorkout: React.FC = () => {
                   )}
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
                   <TouchableOpacity
-                    onPress={async () => {
-                      setLoadingSets(true);
-                      try {
-                        const exerciseData = await getSets(exercise.id);
-                        setSelectedExercise({ 
-                          name: exerciseData.name, 
-                          exerciseId: exerciseData.id, 
-                          index,
-                          sets: exerciseData.sets || [],
-                          preFilledFlag: exerciseData.preFilledFlag,
-                          preFilledDate: exerciseData.preFilledDate,
-                          preFilledWorkoutName: exerciseData.preFilledWorkoutName,
-                          exercisePictureUrl: exerciseData.exercisePictureUrl,
-                        });
-                        setEditModalVisible(true);
-                      } catch (error) {
-                        console.error("Error fetching sets:", error);
-                        // Fallback to existing exercise data if API call fails
-                        setSelectedExercise({ 
-                          name: exercise.name, 
-                          exerciseId: exercise.id, 
-                          index,
-                          sets: exercise.sets || [],
-                          preFilledFlag: exercise.preFilledFlag,
-                          preFilledDate: exercise.preFilledDate,
-                          preFilledWorkoutName: exercise.preFilledWorkoutName,
-                          exercisePictureUrl: exercise.exercisePictureUrl,
-                        });
-                        setEditModalVisible(true);
-                      } finally {
-                        setLoadingSets(false);
-                      }
+                    onPress={() => {
+                      router.push({
+                        pathname: "/workout/EditExercise" as any,
+                        params: {
+                          exerciseId: exercise.id,
+                          exerciseName: exercise.name,
+                          exercisePictureUrl: exercise.exercisePictureUrl || "",
+                          preFilledFlag: exercise.preFilledFlag || "",
+                          preFilledDate: exercise.preFilledDate || "",
+                          preFilledWorkoutName: exercise.preFilledWorkoutName || "",
+                          workoutId: workoutId,
+                        },
+                      });
                     }}
                     style={styles.editButton}
-                    disabled={loadingSets}
                   >
-                    {loadingSets ? (
-                      <ActivityIndicator size="small" color="#3b82f6" />
-                    ) : (
-                      <Ionicons name="create-outline" size={20} color="#3b82f6" />
-                    )}
+                    <Ionicons name="create-outline" size={20} color="#3b82f6" />
                   </TouchableOpacity>
                 </View>
               ))
@@ -191,21 +163,6 @@ const ContinueWorkout: React.FC = () => {
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>
       </View>
-
-      <EditExerciseModal
-        visible={editModalVisible}
-        onClose={() => {
-          setEditModalVisible(false);
-          setSelectedExercise(null);
-        }}
-        exerciseName={selectedExercise?.name || ""}
-        exerciseId={selectedExercise?.exerciseId || ""}
-        existingSets={selectedExercise?.sets || []}
-        preFilledFlag={selectedExercise?.preFilledFlag}
-        preFilledDate={selectedExercise?.preFilledDate}
-        preFilledWorkoutName={selectedExercise?.preFilledWorkoutName}
-        exercisePictureUrl={selectedExercise?.exercisePictureUrl}
-      />
     </SafeAreaView>
   );
 };
