@@ -28,7 +28,11 @@ const NewWorkout: React.FC = () => {
     }
     
     if (selectedDate) {
-      setWorkoutDate(selectedDate);
+      // Ensure the selected date is not in the future
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // Set to end of today
+      const dateToSet = selectedDate > today ? today : selectedDate;
+      setWorkoutDate(dateToSet);
     }
   };
 
@@ -90,6 +94,7 @@ const NewWorkout: React.FC = () => {
             mode="date"
             display={Platform.OS === "ios" ? "spinner" : "default"}
             onChange={onDateChange}
+            maximumDate={new Date()}
             textColor="#ffffff"
             themeVariant="dark"
           />
