@@ -1,0 +1,11 @@
+# React Native / Expo
+node_modules/
+.expo/
+.expo-shared/
+
+# macOS
+.DS_Store
+
+# Env / local configs
+.env
+
