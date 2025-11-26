@@ -64,7 +64,7 @@ const ContinuePreMadeWorkout: React.FC = () => {
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={() => router.push("/(tabs)/workout")}
           >
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
@@ -85,7 +85,7 @@ const ContinuePreMadeWorkout: React.FC = () => {
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={() => router.push("/(tabs)/workout")}
           >
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
@@ -111,7 +111,7 @@ const ContinuePreMadeWorkout: React.FC = () => {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => router.push("/(tabs)/workout")}
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -195,7 +195,7 @@ const ContinuePreMadeWorkout: React.FC = () => {
 
         <TouchableOpacity
           style={styles.doneButton}
-          onPress={() => router.push("/(tabs)/home")}
+          onPress={() => router.push("/(tabs)/workout")}
         >
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>

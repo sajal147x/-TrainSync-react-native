@@ -51,7 +51,7 @@ const ContinueWorkout: React.FC = () => {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => router.push("/(tabs)/home")}
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -70,7 +70,7 @@ const ContinueWorkout: React.FC = () => {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => router.push("/(tabs)/home")}
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
