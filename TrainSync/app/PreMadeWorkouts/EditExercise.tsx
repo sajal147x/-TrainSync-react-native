@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  TextInput,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -16,13 +15,17 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
-import { addSetToExercise, updateSetInExercise, deleteSet, SetDto, getSets } from "../api/workout";
+import {
+  addSetToPreMadeWorkout,
+  deleteSetFromPreMadeWorkout,
+  SetDtoForDelete,
+  getPreMadeWorkoutSets,
+} from "../api/PreMadeWorkout";
 
 interface Set {
   id: string;
   setId?: string; // Backend set ID after saving
-  weight: string;
-  reps: string;
+  setNumber: number;
   isSaved: boolean;
 }
 
@@ -33,61 +36,44 @@ const EditExercise: React.FC = () => {
   const exerciseId = params.exerciseId as string;
   const exerciseName = params.exerciseName as string;
   const exercisePictureUrl = params.exercisePictureUrl as string | undefined;
-  const preFilledFlag = params.preFilledFlag as string | undefined;
-  const preFilledDate = params.preFilledDate as string | undefined;
-  const preFilledWorkoutName = params.preFilledWorkoutName as string | undefined;
-  const workoutId = params.workoutId as string | undefined;
   
   const [sets, setSets] = useState<Set[]>([]);
   const [savingSetId, setSavingSetId] = useState<string | null>(null);
+  const [loadingSets, setLoadingSets] = useState<boolean>(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [exerciseSelectionVisible, setExerciseSelectionVisible] = useState(false);
   const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
 
-  // Format date from ISO format to "Nov 20, 2025" format
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ];
-    const month = months[date.getMonth()];
-    const day = date.getDate();
-    const year = date.getFullYear();
-    return `${month} ${day}, ${year}`;
-  };
-
-  // Fetch existing sets when component mounts
+  // Fetch and pre-populate sets when component mounts
   useEffect(() => {
     const fetchSets = async () => {
-      if (!exerciseId) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const exerciseData = await getSets(exerciseId);
-        if (exerciseData.sets && exerciseData.sets.length > 0) {
-          // Sort sets by setNumber before transforming
-          const sortedSets = [...exerciseData.sets].sort((a, b) => a.setNumber - b.setNumber);
-          const transformedSets: Set[] = sortedSets.map((setDto) => ({
-            id: setDto.id,
-            setId: setDto.id, // Use the backend ID
-            weight: setDto.weight.toString(),
-            reps: setDto.reps.toString(),
-            isSaved: true, // Existing sets are already saved
-          }));
-          setSets(transformedSets);
-        } else {
+      if (exerciseId) {
+        setLoadingSets(true);
+        try {
+          const fetchedSets = await getPreMadeWorkoutSets(exerciseId);
+          
+          if (fetchedSets.length > 0) {
+            // Sort sets by setNumber before transforming
+            const sortedSets = [...fetchedSets].sort(
+              (a, b) => a.setNumber - b.setNumber
+            );
+            const transformedSets: Set[] = sortedSets.map((setDto) => ({
+              id: setDto.id,
+              setId: setDto.id, // Use the backend ID
+              setNumber: setDto.setNumber,
+              isSaved: true, // Existing sets are already saved
+            }));
+            setSets(transformedSets);
+          } else {
+            // Reset sets if no existing sets
+            setSets([]);
+          }
+        } catch (error) {
+          console.error("Failed to fetch sets:", error);
+          // On error, reset sets to empty array
           setSets([]);
+        } finally {
+          setLoadingSets(false);
         }
-      } catch (error) {
-        console.error("Error fetching sets:", error);
-        setSets([]);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -104,19 +90,13 @@ const EditExercise: React.FC = () => {
   }, []);
 
   const addSet = () => {
+    const currentSetCount = sets.length;
     const newSet: Set = {
       id: Date.now().toString(),
-      weight: "",
-      reps: "",
+      setNumber: currentSetCount + 1,
       isSaved: false,
     };
     setSets([...sets, newSet]);
-  };
-
-  const updateSet = (id: string, field: "weight" | "reps", value: string) => {
-    setSets(
-      sets.map((set) => (set.id === id ? { ...set, [field]: value } : set))
-    );
   };
 
   const removeSet = async (id: string) => {
@@ -130,19 +110,19 @@ const EditExercise: React.FC = () => {
 
     // Filter out the set to be removed
     const remainingSets = sets.filter((set) => set.id !== id);
-    
+
     // If the set was saved (has a setId), call the API to delete it
     if (setToRemove.setId) {
       try {
         // Calculate new order for remaining saved sets
-        const newSets = remainingSets
+        const newSets: SetDtoForDelete[] = remainingSets
           .filter((set) => set.setId) // Only include saved sets
           .map((set, index) => ({
             id: set.setId!,
             setNumber: index + 1, // 1-indexed set numbers
           }));
 
-        await deleteSet({
+        await deleteSetFromPreMadeWorkout({
           deletedSetId: setToRemove.setId,
           newSets,
         });
@@ -153,54 +133,48 @@ const EditExercise: React.FC = () => {
       }
     }
 
+    // Update remaining sets with new setNumbers
+    const updatedSets = remainingSets.map((set, index) => ({
+      ...set,
+      setNumber: index + 1,
+    }));
+
     // Update local state with remaining sets
-    setSets(remainingSets);
+    setSets(updatedSets);
     // Clean up the ref
     delete swipeableRefs.current[id];
   };
 
   const saveSet = async (id: string) => {
     const set = sets.find((s) => s.id === id);
-    if (!set || !set.weight || !set.reps) return;
+    if (!set) return;
 
     setSavingSetId(id);
     try {
       if (set.setId) {
-        // Update existing set
-        console.log('Updating existing set with ID:', set.setId);
-        await updateSetInExercise({
-          setId: set.setId,
-          weight: set.weight,
-          reps: set.reps,
-        });
+        // Update existing set (if needed in future)
+        // For now, we don't update, just mark as saved
+        setSets(
+          sets.map((s) => (s.id === id ? { ...s, isSaved: true } : s))
+        );
       } else {
-        // Create new set
-        const setIndex = sets.findIndex((s) => s.id === id);
-        const setNumber = setIndex + 1;
-        
-
-        const requestPayload = {
+        // Create new set - API returns the setId
+        const setId = await addSetToPreMadeWorkout({
           exerciseId,
-          weight: set.weight,
-          reps: set.reps,
-          setNumber,
-        };
+          setNumber: set.setNumber,
+        });
         
-        const setId = await addSetToExercise(requestPayload);
-        setSets(
-          sets.map((s) =>
-            s.id === id ? { ...s, setId, isSaved: true } : s
-          )
-        );
-      }
-      
-      // Mark as saved if updating
-      if (set.setId) {
-        setSets(
-          sets.map((s) =>
-            s.id === id ? { ...s, isSaved: true } : s
-          )
-        );
+        // Ensure setId is assigned to the set
+        if (setId) {
+          setSets(
+            sets.map((s) =>
+              s.id === id ? { ...s, setId, isSaved: true } : s
+            )
+          );
+        } else {
+          console.error("API did not return a setId");
+          throw new Error("Failed to get setId from API");
+        }
       }
     } catch (error) {
       console.error("Failed to save set:", error);
@@ -208,51 +182,6 @@ const EditExercise: React.FC = () => {
     } finally {
       setSavingSetId(null);
     }
-  };
-
-  const editSet = (id: string) => {
-    // Close the swipeable if it's open
-    if (swipeableRefs.current[id]) {
-      swipeableRefs.current[id]?.close();
-    }
-    setSets(
-      sets.map((set) => (set.id === id ? { ...set, isSaved: false } : set))
-    );
-  };
-
-  const handleChangeExercise = () => {
-    if (!workoutId) {
-      console.error("workoutId is required to change exercise");
-      return;
-    }
-    router.push({
-      pathname: "/workout/exercise-selection",
-      params: {
-        workoutId: workoutId,
-        mode: "switch",
-        currentExerciseId: exerciseId,
-      },
-    });
-  };
-
-  const renderLeftActions = (id: string, set: Set) => {
-    if (!set.isSaved) return null;
-    
-    return (
-      <View style={styles.leftActionContainer}>
-        <TouchableOpacity
-          style={styles.editActionButton}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            editSet(id);
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="pencil" size={22} color="#fff" />
-          <Text style={styles.actionText}>Edit</Text>
-        </TouchableOpacity>
-      </View>
-    );
   };
 
   const renderRightActions = (id: string) => {
@@ -272,26 +201,6 @@ const EditExercise: React.FC = () => {
       </View>
     );
   };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Loading...</Text>
-          <View style={styles.placeholder} />
-        </View>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color="#3b82f6" />
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -326,20 +235,23 @@ const EditExercise: React.FC = () => {
             )}
             <Text style={styles.title}>{exerciseName || "Edit Exercise"}</Text>
           </View>
-          {workoutId ? (
-            <TouchableOpacity
-              style={styles.changeExerciseButton}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                handleChangeExercise();
-              }}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="swap-horizontal" size={20} color="#3b82f6" />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.placeholder} />
-          )}
+          <TouchableOpacity
+            style={styles.switchButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push({
+                pathname: "/PreMadeWorkouts/exercise-selection",
+                params: {
+                  workoutName: exerciseName || "",
+                  isSwitchMode: "true",
+                  preMadeExerciseId: exerciseId,
+                },
+              });
+            }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="swap-horizontal" size={20} color="#3b82f6" />
+          </TouchableOpacity>
         </View>
 
         {/* Sets List */}
@@ -348,15 +260,14 @@ const EditExercise: React.FC = () => {
             style={styles.setsContainer}
             showsVerticalScrollIndicator={false}
           >
-            {preFilledFlag === "YES" && preFilledDate && (
-              <View style={styles.infoBanner}>
-                <Ionicons name="information-circle" size={20} color="#3b82f6" />
-                <Text style={styles.infoBannerText}>
-                  Pre filled from {preFilledWorkoutName || "workout"} on {formatDate(preFilledDate)}
+            {loadingSets ? (
+              <View style={styles.emptyState}>
+                <ActivityIndicator size="large" color="#3b82f6" />
+                <Text style={styles.emptyStateText}>
+                  Loading sets...
                 </Text>
               </View>
-            )}
-            {sets.length === 0 ? (
+            ) : sets.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="barbell-outline" size={48} color="#4b5563" />
                 <Text style={styles.emptyStateText}>
@@ -367,18 +278,15 @@ const EditExercise: React.FC = () => {
                 </Text>
               </View>
             ) : (
-              sets.map((set, index) => (
+              sets.map((set) => (
                 <Swipeable
                   key={set.id}
                   ref={(ref) => {
                     swipeableRefs.current[set.id] = ref;
                   }}
-                  renderLeftActions={() => renderLeftActions(set.id, set)}
                   renderRightActions={() => renderRightActions(set.id)}
-                  overshootLeft={false}
                   overshootRight={false}
                   friction={1.5}
-                  leftThreshold={40}
                   rightThreshold={40}
                   onSwipeableWillOpen={(direction) => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -386,15 +294,17 @@ const EditExercise: React.FC = () => {
                 >
                   <View style={styles.setItem}>
                     <View style={styles.setHeader}>
-                      <Text style={styles.setNumber}>Set {index + 1}</Text>
+                      <Text style={styles.setNumber}>Set {set.setNumber}</Text>
                       <View style={styles.actionButtons}>
                         {set.isSaved ? (
-                          <TouchableOpacity
-                            onPress={() => editSet(set.id)}
-                            style={styles.editButton}
-                          >
-                            <Ionicons name="pencil-outline" size={20} color="#3b82f6" />
-                          </TouchableOpacity>
+                          <View style={styles.savedIndicator}>
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={20}
+                              color="#10b981"
+                            />
+                            <Text style={styles.savedText}>Saved</Text>
+                          </View>
                         ) : (
                           <TouchableOpacity
                             onPress={() => saveSet(set.id)}
@@ -414,42 +324,6 @@ const EditExercise: React.FC = () => {
                         >
                           <Ionicons name="trash-outline" size={20} color="#ef4444" />
                         </TouchableOpacity>
-                      </View>
-                    </View>
-                    <View style={styles.inputRow}>
-                      <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Weight (lbs)</Text>
-                        <TextInput
-                          style={[
-                            styles.input,
-                            set.isSaved && styles.inputReadOnly,
-                          ]}
-                          value={set.weight}
-                          onChangeText={(value) =>
-                            updateSet(set.id, "weight", value)
-                          }
-                          placeholder="0"
-                          placeholderTextColor="#6b7280"
-                          keyboardType="numeric"
-                          editable={!set.isSaved}
-                        />
-                      </View>
-                      <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Reps</Text>
-                        <TextInput
-                          style={[
-                            styles.input,
-                            set.isSaved && styles.inputReadOnly,
-                          ]}
-                          value={set.reps}
-                          onChangeText={(value) =>
-                            updateSet(set.id, "reps", value)
-                          }
-                          placeholder="0"
-                          placeholderTextColor="#6b7280"
-                          keyboardType="numeric"
-                          editable={!set.isSaved}
-                        />
                       </View>
                     </View>
                   </View>
@@ -552,24 +426,11 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
+  switchButton: {
+    padding: 8,
+  },
   placeholder: {
     width: 40,
-  },
-  changeExerciseButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "rgba(59, 130, 246, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.3)",
-  },
-  changeExerciseButtonText: {
-    color: "#3b82f6",
-    fontSize: 14,
-    fontWeight: "600",
   },
   setsContainer: {
     flex: 1,
@@ -580,11 +441,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 16,
     gap: 12,
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   emptyState: {
     alignItems: "center",
@@ -613,7 +469,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
   },
   setNumber: {
     color: "#3b82f6",
@@ -628,39 +483,18 @@ const styles = StyleSheet.create({
   saveButton: {
     padding: 4,
   },
-  editButton: {
-    padding: 4,
+  savedIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  savedText: {
+    color: "#10b981",
+    fontSize: 14,
+    fontWeight: "600",
   },
   removeButton: {
     padding: 4,
-  },
-  inputRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  inputContainer: {
-    flex: 1,
-  },
-  inputLabel: {
-    color: "#9ca3af",
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: "rgba(17, 24, 39, 0.6)",
-    borderRadius: 8,
-    padding: 12,
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.3)",
-  },
-  inputReadOnly: {
-    backgroundColor: "rgba(17, 24, 39, 0.3)",
-    borderColor: "rgba(59, 130, 246, 0.15)",
-    opacity: 0.8,
   },
   addSetButton: {
     backgroundColor: "rgba(59, 130, 246, 0.2)",
@@ -692,29 +526,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  leftActionContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "flex-start",
-    marginBottom: 12,
-    paddingLeft: 4,
-  },
   rightActionContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "flex-end",
     marginBottom: 12,
     paddingRight: 4,
-  },
-  editActionButton: {
-    backgroundColor: "#3b82f6",
-    justifyContent: "center",
-    alignItems: "center",
-    width: 90,
-    height: "100%",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    gap: 4,
   },
   deleteActionButton: {
     backgroundColor: "#ef4444",
@@ -730,23 +547,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "600",
-  },
-  infoBanner: {
-    backgroundColor: "rgba(59, 130, 246, 0.15)",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.3)",
-  },
-  infoBannerText: {
-    color: "#93c5fd",
-    fontSize: 14,
-    fontWeight: "500",
-    flex: 1,
   },
   imageModalOverlay: {
     ...StyleSheet.absoluteFillObject,

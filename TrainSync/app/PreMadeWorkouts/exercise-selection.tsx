@@ -31,6 +31,8 @@ const ExerciseSelection: React.FC = () => {
   const params = useLocalSearchParams();
   const workoutName = (params.workoutName as string) || "";
   const preMadeWorkoutId = params.preMadeWorkoutId as string | undefined;
+  const isSwitchMode = params.isSwitchMode === "true";
+  const preMadeExerciseId = params.preMadeExerciseId as string | undefined;
   const [exercises, setExercises] = useState<ExerciseDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -499,6 +501,13 @@ const ExerciseSelection: React.FC = () => {
         }}
         workoutName={workoutName}
         preMadeWorkoutId={preMadeWorkoutId}
+        isSwitchMode={isSwitchMode}
+        preMadeExerciseId={preMadeExerciseId}
+        onExerciseSwitched={() => {
+          setIsModalVisible(false);
+          setSelectedExercise(null);
+          router.back();
+        }}
       />
     </SafeAreaView>
   );

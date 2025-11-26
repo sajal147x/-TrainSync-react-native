@@ -16,7 +16,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { ExerciseDto } from "../api/exercises";
-import { createPreMadeRoutine, addExerciseToPreMadeWorkout, getPreMadeWorkout } from "../api/PreMadeWorkout";
+import { createPreMadeRoutine, addExerciseToPreMadeWorkout, getPreMadeWorkout, switchExerciseInPreMadeWorkout } from "../api/PreMadeWorkout";
 
 interface PreMadeExerciseDetailsModalProps {
   visible: boolean;
@@ -24,6 +24,9 @@ interface PreMadeExerciseDetailsModalProps {
   onClose: () => void;
   workoutName: string;
   preMadeWorkoutId?: string;
+  isSwitchMode?: boolean;
+  preMadeExerciseId?: string;
+  onExerciseSwitched?: () => void;
 }
 
 const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = ({
@@ -32,6 +35,9 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
   onClose,
   workoutName,
   preMadeWorkoutId,
+  isSwitchMode = false,
+  preMadeExerciseId,
+  onExerciseSwitched,
 }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +53,20 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
 
     setIsLoading(true);
     try {
-      if (preMadeWorkoutId) {
+      if (isSwitchMode && preMadeExerciseId) {
+        // Switching exercise in pre-made workout
+        await switchExerciseInPreMadeWorkout({
+          preMadeExerciseId,
+          newExerciseLibraryId: exercise.id,
+        });
+        
+        onClose();
+        if (onExerciseSwitched) {
+          onExerciseSwitched();
+        } else {
+          router.back();
+        }
+      } else if (preMadeWorkoutId) {
         // Adding to existing workout
         // Fetch current workout to determine next exercise order
         const currentWorkout = await getPreMadeWorkout(preMadeWorkoutId);
@@ -92,10 +111,10 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
         });
       }
     } catch (error: any) {
-      console.error("Error adding exercise to pre-made workout:", error);
+      console.error("Error adding/switching exercise to pre-made workout:", error);
       Alert.alert(
         "Error",
-        error.response?.data?.message || "Failed to add exercise. Please try again."
+        error.response?.data?.message || `Failed to ${isSwitchMode ? 'switch' : 'add'} exercise. Please try again.`
       );
     } finally {
       setIsLoading(false);
@@ -203,11 +222,21 @@ const PreMadeExerciseDetailsModal: React.FC<PreMadeExerciseDetailsModalProps> = 
                   >
                     <View style={styles.buttonInner}>
                       {isLoading ? (
-                        <Text style={styles.addButtonText}>Adding...</Text>
+                        <Text style={styles.addButtonText}>
+                          {isSwitchMode ? "Switching..." : "Adding..."}
+                        </Text>
                       ) : (
                         <>
-                          <Ionicons name="add-circle" size={24} color="#fff" />
-                          <Text style={styles.addButtonText}>Add Exercise to {workoutName}</Text>
+                          <Ionicons 
+                            name={isSwitchMode ? "swap-horizontal" : "add-circle"} 
+                            size={24} 
+                            color="#fff" 
+                          />
+                          <Text style={styles.addButtonText}>
+                            {isSwitchMode 
+                              ? "Switch Exercise" 
+                              : `Add Exercise to ${workoutName}`}
+                          </Text>
                         </>
                       )}
                     </View>

@@ -143,3 +143,17 @@ export async function startWorkoutUsingPreMade(
   return response.data;
 }
 
+export interface SwitchExerciseInPreMadeWorkoutRequest {
+  preMadeExerciseId: string;
+  newExerciseLibraryId: string;
+}
+
+/**
+ * Switches an exercise in a pre-made workout to a different exercise from the library.
+ */
+export async function switchExerciseInPreMadeWorkout(
+  request: SwitchExerciseInPreMadeWorkoutRequest
+): Promise<void> {
+  await client.post("/switch-exercise-in-pre-made", request);
+}
+

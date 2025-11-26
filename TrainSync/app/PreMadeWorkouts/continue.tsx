@@ -15,7 +15,6 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback } from "react";
 import { getPreMadeWorkout, PreMadeWorkout } from "../api/PreMadeWorkout";
-import EditExercisePreMadeWorkoutModal from "../components/EditExercisePreMadeWorkoutModal";
 
 const ContinuePreMadeWorkout: React.FC = () => {
   const router = useRouter();
@@ -24,10 +23,6 @@ const ContinuePreMadeWorkout: React.FC = () => {
   const [workout, setWorkout] = useState<PreMadeWorkout | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingExercise, setEditingExercise] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
 
   const fetchWorkout = useCallback(async () => {
     if (!preMadeWorkoutId) {
@@ -146,7 +141,14 @@ const ContinuePreMadeWorkout: React.FC = () => {
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
                   <TouchableOpacity
                     style={styles.editButton}
-                    onPress={() => setEditingExercise({ id: exercise.id, name: exercise.name })}
+                    onPress={() => router.push({
+                      pathname: "/PreMadeWorkouts/EditExercise",
+                      params: {
+                        exerciseId: exercise.id,
+                        exerciseName: exercise.name,
+                        exercisePictureUrl: exercise.exercisePictureUrl || "",
+                      }
+                    })}
                     activeOpacity={0.7}
                   >
                     <Ionicons name="create-outline" size={20} color="#3b82f6" />
@@ -198,14 +200,6 @@ const ContinuePreMadeWorkout: React.FC = () => {
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>
       </View>
-
-      <EditExercisePreMadeWorkoutModal
-        visible={editingExercise !== null}
-        onClose={() => setEditingExercise(null)}
-        exerciseName={editingExercise?.name || ""}
-        exerciseId={editingExercise?.id || ""}
-        existingSets={[]}
-      />
     </SafeAreaView>
   );
 };
