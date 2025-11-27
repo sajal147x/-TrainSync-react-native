@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from './home';
 import Workouts from './workout';
 import Settings from './settings';
+import Community from './community';
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,6 +18,7 @@ export default function Layout() {
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Workouts') iconName = 'barbell';
           else if (route.name === 'Settings') iconName = 'settings';
+          else if (route.name === 'Community') iconName = 'people';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#2563eb',
@@ -26,6 +28,7 @@ export default function Layout() {
     >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Workouts" component={Workouts} />
+      <Tab.Screen name="Community" component={Community} />
       <Tab.Screen name="Settings" component={Settings} />
     </Tab.Navigator>
   );
