@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { searchUser, UserSearchResponseDto } from "../api/friendRequest";
+import { searchUser, sendFriendRequest, UserSearchResponseDto } from "../api/friendRequest";
 
 const AddFriend: React.FC = () => {
   const router = useRouter();
@@ -34,10 +34,25 @@ const AddFriend: React.FC = () => {
     }
   };
 
-  const handleSendRequest = () => {
-    // TODO: Implement send friend request functionality
-    if (searchResult !== "User Not Found" && searchResult !== null) {
-      console.log("Send friend request to:", searchResult);
+  const handleSendRequest = async () => {
+    if (searchResult === "User Not Found" || searchResult === null) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await sendFriendRequest(searchResult.userId);
+      // Refresh by re-searching the user to get updated status
+      const updatedResult = await searchUser(userName.trim());
+      setSearchResult(updatedResult);
+    } catch (error: any) {
+      console.error("Error sending friend request:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to send friend request. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,22 +130,37 @@ const AddFriend: React.FC = () => {
                 <View style={styles.userInfo}>
                   <Text style={styles.userName}>{searchResult.name}</Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.sendRequestButton}
-                  onPress={handleSendRequest}
-                  activeOpacity={0.8}
-                >
-                  <BlurView intensity={80} tint="dark" style={styles.sendRequestBlurView}>
-                    <LinearGradient
-                      colors={["rgba(59, 130, 246, 0.3)", "rgba(59, 130, 246, 0.2)", "rgba(59, 130, 246, 0.3)"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.sendRequestGradient}
-                    >
-                      <Text style={styles.sendRequestText}>Send Request</Text>
-                    </LinearGradient>
-                  </BlurView>
-                </TouchableOpacity>
+                {searchResult.requestStatus === "NONE" ? (
+                  <TouchableOpacity
+                    style={styles.sendRequestButton}
+                    onPress={handleSendRequest}
+                    activeOpacity={0.8}
+                  >
+                    <BlurView intensity={80} tint="dark" style={styles.sendRequestBlurView}>
+                      <LinearGradient
+                        colors={["rgba(59, 130, 246, 0.3)", "rgba(59, 130, 246, 0.2)", "rgba(59, 130, 246, 0.3)"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.sendRequestGradient}
+                      >
+                        <Text style={styles.sendRequestText}>Send Request</Text>
+                      </LinearGradient>
+                    </BlurView>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.statusButton}>
+                    <BlurView intensity={80} tint="dark" style={styles.sendRequestBlurView}>
+                      <LinearGradient
+                        colors={["rgba(107, 114, 128, 0.3)", "rgba(107, 114, 128, 0.2)", "rgba(107, 114, 128, 0.3)"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.sendRequestGradient}
+                      >
+                        <Text style={styles.statusText}>{searchResult.requestStatus}</Text>
+                      </LinearGradient>
+                    </BlurView>
+                  </View>
+                )}
               </View>
             </BlurView>
           </View>
@@ -292,6 +322,23 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   sendRequestText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  statusButton: {
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(107, 114, 128, 0.4)",
+    minWidth: 120,
+    opacity: 0.7,
+  },
+  statusText: {
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",

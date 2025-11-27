@@ -6,6 +6,7 @@ export interface UserSearchResponseDto {
   age: number;
   email: string;
   profilePictureUrl: string;
+  requestStatus: "NONE" | "PENDING" | "ACCEPTED";
 }
 
 export interface UserSearchDto {
@@ -26,5 +27,17 @@ export async function searchUser(userName: string): Promise<UserSearchResponseDt
   
   // Otherwise, return the user data
   return response.data as UserSearchResponseDto;
+}
+
+export interface SendFriendRequestDto {
+  userId: string;
+}
+
+export async function sendFriendRequest(userId: string): Promise<void> {
+  const requestBody: SendFriendRequestDto = {
+    userId,
+  };
+  
+  await client.post("/friend-requests/send-request", requestBody);
 }
 
