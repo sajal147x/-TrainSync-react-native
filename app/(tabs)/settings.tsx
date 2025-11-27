@@ -211,8 +211,8 @@ export default function Settings() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>{user.email}</Text>
+            <Text style={styles.label}>Username</Text>
+            <Text style={styles.value}>{user.username}</Text>
           </View>
 
           <View style={styles.field}>

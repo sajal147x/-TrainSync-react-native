@@ -15,22 +15,36 @@ import storage from "../api/storage";
 
 
 export default function SignIn() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const router = useRouter();
 
   const handleSignIn = async () => {
+    setErrorMessage(""); // Clear any previous error
     try {
-      const response = await signIn(email, password);
-       // after successful signup/signin
-    await storage.setItemAsync("jwt", response.data.access_token);
+      const response = await signIn(username, password);
+      // Check if response is unauthorized (401)
+      if (response.status === 401) {
+        // Backend returns error messages directly in response.data as strings
+        // "User Not Found" or "Invalid credentials"
+        const errorMsg = typeof response.data === "string" 
+          ? response.data 
+          : "Sign in failed";
+        setErrorMessage(errorMsg);
+        return;
+      }
+      
+      // Store JWT token in SecureStore (via storage utility)
+      // Response format: { userId, username, accessToken }
+      await storage.setItemAsync("jwt", response.data.accessToken);
 
       router.replace("/(tabs)/home");
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.message || "Sign in failed");
+      setErrorMessage(error.response?.data?.message || "Sign in failed");
     }
   };
 
@@ -46,23 +60,31 @@ export default function SignIn() {
         </Text>
 
         <View style={styles.form}>
-          <Text style={styles.label}>Email</Text>
+          {errorMessage ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          ) : null}
+          <Text style={styles.label}>Username</Text>
           <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="you@example.com"
+            value={username}
+            onChangeText={(text) => {
+              setUsername(text);
+              setErrorMessage(""); // Clear error when user starts typing
+            }}
+            placeholder="Enter your username"
             placeholderTextColor="#9AA4B2"
             style={styles.input}
-            keyboardType="email-address"
             autoCapitalize="none"
-            textContentType="emailAddress"
+            textContentType="username"
           />
 
           <Text style={[styles.label, { marginTop: 16 }]}>Password</Text>
           <View style={styles.passwordRow}>
             <TextInput
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                setErrorMessage(""); // Clear error when user starts typing
+              }}
               placeholder="Enter your password"
               placeholderTextColor="#9AA4B2"
               secureTextEntry={!passwordVisible}
@@ -134,4 +156,10 @@ const styles = StyleSheet.create({
   footerRow: { flexDirection: "row", justifyContent: "center", marginTop: 20 },
   footerText: { color: "#9AA4B2" },
   signInLink: { color: "#60a5fa", fontWeight: "600" },
+  errorText: {
+    color: "#ef4444",
+    fontSize: 14,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
 });

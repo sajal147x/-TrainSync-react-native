@@ -4,6 +4,7 @@ export interface UserDetails {
   id: string;
   name: string;
   email: string;
+  username: string;
   age: number | null;
   profilePictureUrl?: string | null;
   userType: string;

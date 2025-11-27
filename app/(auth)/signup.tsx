@@ -14,24 +14,55 @@ import { signUp } from "../api/auth";
 import storage from "../api/storage";
 
 export default function SignUp() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");  // new field
   const [age, setAge] = useState("");    // new field
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const router = useRouter();
 
-  const handleSignUp = async () => {
-    try {
-      const response = await signUp(email, password);
-      await storage.setItemAsync("jwt", response.data.access_token);
+  const handleAgeChange = (text: string) => {
+    // Only allow numeric input
+    const numericValue = text.replace(/[^0-9]/g, "");
+    setAge(numericValue);
+    setErrorMessage(""); // Clear error when user types
+  };
 
-      alert(`Signup successful for ${email}`);
+  const handleSignUp = async () => {
+    setErrorMessage(""); // Clear previous errors
+    try {
+      const ageNumber = parseInt(age, 10);
+      if (!age || isNaN(ageNumber)) {
+        setErrorMessage("Please enter a valid age");
+        return;
+      }
+      const response = await signUp(username, password, name, ageNumber);
+      
+      // Check response immediately - if 401 with "User Already Exists", show error and return
+      if (response.status === 401 && response.data === "User Already Exists") {
+        setErrorMessage("User Already Exists");
+        return;
+      }
+      
+      // If not successful, handle other error cases
+      if (response.status !== 200 && response.status !== 201) {
+        const errorMsg = response.data?.message || response.data || "Sign up failed";
+        setErrorMessage(errorMsg);
+        return;
+      }
+      
+      // Store JWT token in secure store only if successful
+      await storage.setItemAsync("jwt", response.data.accessToken);
+
+      alert(`Signup successful for ${username}`);
       router.replace("/(tabs)/home");
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.message || "Sign up failed");
+      // Handle network errors or other unexpected errors
+      const errorMsg = error.response?.data?.message || error.response?.data || "Sign up failed";
+      setErrorMessage(errorMsg);
     }
   };
 
@@ -51,7 +82,10 @@ export default function SignUp() {
           <Text style={styles.label}>Name</Text>
           <TextInput
             value={name}
-            onChangeText={setName}
+            onChangeText={(text) => {
+              setName(text);
+              setErrorMessage(""); // Clear error when user types
+            }}
             placeholder="Your name"
             placeholderTextColor="#9AA4B2"
             style={styles.input}
@@ -61,24 +95,26 @@ export default function SignUp() {
           <Text style={[styles.label, { marginTop: 16 }]}>Age</Text>
           <TextInput
             value={age}
-            onChangeText={setAge}
+            onChangeText={handleAgeChange}
             placeholder="Your age"
             placeholderTextColor="#9AA4B2"
             style={styles.input}
-            keyboardType="numeric"
+            keyboardType="number-pad"
           />
 
-          {/* Email */}
-          <Text style={[styles.label, { marginTop: 16 }]}>Email</Text>
+          {/* Username */}
+          <Text style={[styles.label, { marginTop: 16 }]}>Username</Text>
           <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="you@example.com"
+            value={username}
+            onChangeText={(text) => {
+              setUsername(text);
+              setErrorMessage(""); // Clear error when user types
+            }}
+            placeholder="Your username"
             placeholderTextColor="#9AA4B2"
             style={styles.input}
-            keyboardType="email-address"
             autoCapitalize="none"
-            textContentType="emailAddress"
+            textContentType="username"
           />
 
           {/* Password */}
@@ -86,7 +122,10 @@ export default function SignUp() {
           <View style={styles.passwordRow}>
             <TextInput
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                setErrorMessage(""); // Clear error when user types
+              }}
               placeholder="Enter a password"
               placeholderTextColor="#9AA4B2"
               secureTextEntry={!passwordVisible}
@@ -105,6 +144,14 @@ export default function SignUp() {
               />
             </TouchableOpacity>
           </View>
+
+          {/* Error Message */}
+          {errorMessage ? (
+            <View style={styles.errorContainer}>
+              <Ionicons name="alert-circle" size={16} color="#ef4444" />
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          ) : null}
 
           <TouchableOpacity
             style={styles.primaryButton}
@@ -156,5 +203,19 @@ const styles = StyleSheet.create({
   footerRow: { flexDirection: "row", justifyContent: "center", marginTop: 20 },
   footerText: { color: "#9AA4B2" },
   signInLink: { color: "#60a5fa", fontWeight: "600" },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#7f1d1d",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    gap: 8,
+  },
+  errorText: {
+    color: "#fca5a5",
+    fontSize: 14,
+    flex: 1,
+  },
 });
 

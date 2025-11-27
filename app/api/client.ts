@@ -1,10 +1,12 @@
 import axios from "axios";
 import storage from "./storage";
 
-// Use your computer's IP if running on Expo mobile
-// To find your IP: run `ifconfig | grep "inet " | grep -v 127.0.0.1` on Mac/Linux
+// Use environment variable for API URL, fallback to local IP for development
+// Set EXPO_PUBLIC_API_URL in .env file for production
+// For development, use your computer's IP: run `ifconfig | grep "inet " | grep -v 127.0.0.1` on Mac/Linux
 // or `ipconfig` on Windows and look for IPv4 Address
-const API_BASE = "http://10.0.0.199:8080/api";
+const API_BASE = 
+  process.env.EXPO_PUBLIC_API_URL
 
 const client = axios.create({
   baseURL: API_BASE,
@@ -18,9 +20,14 @@ client.interceptors.request.use(async (config) => {
       config.headers = {} as any;
     }
     
-    const stored = await storage.getItemAsync("jwt");
-    if (stored) {
+    // Don't attach JWT token for auth endpoints (signin/signup)
+    const isAuthEndpoint = config.url?.includes("/auth/signin") || config.url?.includes("/auth/signup");
+    
+    if (!isAuthEndpoint) {
+      const stored = await storage.getItemAsync("jwt");
+      if (stored) {
         config.headers.Authorization = `Bearer ${stored}`;
+      }
     }
     
     // Check if data is FormData - handle it specially
