@@ -1,10 +1,30 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator } from "react-native";
 import { Link } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import { getFriendsForUser, FriendsResponseDto } from "../api/community";
 
 const Community: React.FC = () => {
+  const [friends, setFriends] = useState<FriendsResponseDto[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchFriends();
+  }, []);
+
+  const fetchFriends = async () => {
+    try {
+      setLoading(true);
+      const friendsList = await getFriendsForUser();
+      setFriends(friendsList);
+    } catch (error: any) {
+      console.error("Error fetching friends:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -26,6 +46,49 @@ const Community: React.FC = () => {
             </BlurView>
           </TouchableOpacity>
         </Link>
+
+        <View style={styles.friendsSection}>
+          <Text style={styles.sectionTitle}>Friends</Text>
+          <View style={styles.friendsListContainer}>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color="#fff" size="small" />
+              </View>
+            ) : friends.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No friends yet</Text>
+              </View>
+            ) : (
+              <ScrollView 
+                style={styles.friendsScrollView}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
+              >
+                {friends.map((friend) => (
+                  <View key={friend.userId} style={styles.friendCard}>
+                    <BlurView intensity={60} tint="dark" style={styles.friendCardBlur}>
+                      <View style={styles.friendCardContent}>
+                        {friend.profilePictureUrl ? (
+                          <Image
+                            source={{ uri: friend.profilePictureUrl }}
+                            style={styles.profilePicture}
+                          />
+                        ) : (
+                          <View style={styles.profilePicturePlaceholder}>
+                            <Text style={styles.profilePictureText}>
+                              {friend.name.charAt(0).toUpperCase()}
+                            </Text>
+                          </View>
+                        )}
+                        <Text style={styles.friendName}>{friend.name}</Text>
+                      </View>
+                    </BlurView>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -80,6 +143,84 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  friendsSection: {
+    marginTop: 8,
+  },
+  sectionTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 16,
+  },
+  friendsListContainer: {
+    maxHeight: 400,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  friendsScrollView: {
+    flexGrow: 0,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyText: {
+    color: "#6b7280",
+    fontSize: 14,
+  },
+  friendCard: {
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+  },
+  friendCardBlur: {
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "rgba(22, 27, 34, 0.6)",
+  },
+  friendCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    gap: 12,
+  },
+  profilePicture: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
+    borderWidth: 2,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+  },
+  profilePicturePlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(59, 130, 246, 0.3)",
+    borderWidth: 2,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profilePictureText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "600",
+  },
+  friendName: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    flex: 1,
   },
 });
 

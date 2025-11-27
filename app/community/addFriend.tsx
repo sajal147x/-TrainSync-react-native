@@ -1,16 +1,18 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { searchUser, sendFriendRequest, UserSearchResponseDto } from "../api/friendRequest";
+import { searchUser, sendFriendRequest, getReceivedRequests, acceptFriendRequest, UserSearchResponseDto } from "../api/friendRequest";
 
 const AddFriend: React.FC = () => {
   const router = useRouter();
   const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<UserSearchResponseDto | "User Not Found" | null>(null);
+  const [receivedRequests, setReceivedRequests] = useState<UserSearchResponseDto[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
 
   const handleGo = async () => {
     if (!userName.trim()) {
@@ -56,6 +58,49 @@ const AddFriend: React.FC = () => {
     }
   };
 
+  const fetchReceivedRequests = async () => {
+    setLoadingRequests(true);
+    try {
+      const requests = await getReceivedRequests();
+      setReceivedRequests(requests);
+    } catch (error: any) {
+      console.error("Error fetching received requests:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to fetch received requests. Please try again."
+      );
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReceivedRequests();
+  }, []);
+
+  const handleAcceptRequest = async (request: UserSearchResponseDto) => {
+    if (!request.requestId) {
+      Alert.alert("Error", "Request ID is missing");
+      return;
+    }
+
+    setLoadingRequests(true);
+    try {
+      await acceptFriendRequest(request.requestId);
+      // Refresh the received requests list
+      await fetchReceivedRequests();
+      Alert.alert("Success", "Request Accepted");
+    } catch (error: any) {
+      console.error("Error accepting friend request:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to accept friend request. Please try again."
+      );
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -69,7 +114,7 @@ const AddFriend: React.FC = () => {
         <View style={styles.backButton} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.searchContainer}>
           <Text style={styles.label}>Search by Username</Text>
           <BlurView intensity={60} tint="dark" style={styles.searchBarContainer}>
@@ -165,7 +210,56 @@ const AddFriend: React.FC = () => {
             </BlurView>
           </View>
         )}
-      </View>
+
+        <View style={styles.receivedRequestsSection}>
+          <Text style={styles.sectionHeader}>Received Requests</Text>
+          
+          {loadingRequests ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="#fff" size="small" />
+            </View>
+          ) : receivedRequests.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No received requests</Text>
+            </View>
+          ) : (
+            receivedRequests.map((request) => (
+              <View key={request.userId} style={styles.userCardContainer}>
+                <BlurView intensity={60} tint="dark" style={styles.userCard}>
+                  <View style={styles.userCardContent}>
+                    {request.profilePictureUrl && (
+                      <Image
+                        source={{ uri: request.profilePictureUrl }}
+                        style={styles.profilePicture}
+                      />
+                    )}
+                    <View style={styles.userInfo}>
+                      <Text style={styles.userName}>{request.name}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.acceptButton}
+                      onPress={() => handleAcceptRequest(request)}
+                      activeOpacity={0.8}
+                      disabled={loadingRequests}
+                    >
+                      <BlurView intensity={80} tint="dark" style={styles.sendRequestBlurView}>
+                        <LinearGradient
+                          colors={["rgba(34, 197, 94, 0.3)", "rgba(34, 197, 94, 0.2)", "rgba(34, 197, 94, 0.3)"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.sendRequestGradient}
+                        >
+                          <Text style={styles.acceptText}>Accept</Text>
+                        </LinearGradient>
+                      </BlurView>
+                    </TouchableOpacity>
+                  </View>
+                </BlurView>
+              </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -339,6 +433,44 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   statusText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  receivedRequestsSection: {
+    marginTop: 32,
+    paddingBottom: 32,
+  },
+  sectionHeader: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 16,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  emptyText: {
+    color: "#6b7280",
+    fontSize: 14,
+  },
+  acceptButton: {
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.4)",
+    minWidth: 120,
+  },
+  acceptText: {
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",

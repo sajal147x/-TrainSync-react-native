@@ -7,6 +7,7 @@ export interface UserSearchResponseDto {
   email: string;
   profilePictureUrl: string;
   requestStatus: "NONE" | "PENDING" | "ACCEPTED";
+  requestId?: string;
 }
 
 export interface UserSearchDto {
@@ -39,5 +40,22 @@ export async function sendFriendRequest(userId: string): Promise<void> {
   };
   
   await client.post("/friend-requests/send-request", requestBody);
+}
+
+export async function getReceivedRequests(): Promise<UserSearchResponseDto[]> {
+  const response = await client.get("/friend-requests/received-requests");
+  return response.data as UserSearchResponseDto[];
+}
+
+export interface AcceptFriendRequestDto {
+  requestId: string;
+}
+
+export async function acceptFriendRequest(requestId: string): Promise<void> {
+  const requestBody: AcceptFriendRequestDto = {
+    requestId,
+  };
+  
+  await client.post("/friend-requests/accept-request", requestBody);
 }
 
