@@ -1,4 +1,5 @@
 import axios from "axios";
+import { router } from "expo-router";
 import storage from "./storage";
 
 // Use environment variable for API URL, fallback to local IP for development
@@ -59,5 +60,50 @@ client.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+// Response interceptor to handle API failures and logout user
+client.interceptors.response.use(
+  (response) => {
+    // If response is successful, just return it
+    return response;
+  },
+  async (error) => {
+    // Don't logout for signin/signup endpoints (they naturally can fail)
+    const isAuthEndpoint = 
+      error.config?.url?.includes("/auth/signin") || 
+      error.config?.url?.includes("/auth/signup");
+    
+    if (!isAuthEndpoint) {
+      // Check for any API failure:
+      // 1. Network errors (can't reach server)
+      // 2. 401 Unauthorized (invalid/expired token)
+      // 3. Any other error response from server
+      const shouldLogout = 
+        error.code === "ERR_NETWORK" || // Network error
+        !error.response ||               // No response from server
+        error.response?.status === 401;  // Unauthorized
+      
+      if (shouldLogout) {
+        console.log("API failure detected - logging out user");
+        
+        // Clear the stored JWT token
+        try {
+          await storage.deleteItemAsync("jwt");
+        } catch (storageError) {
+          console.error("Error clearing JWT:", storageError);
+        }
+        
+        // Redirect to signin page
+        router.replace("/(auth)/signin");
+        
+        // Don't re-throw the error to prevent it from showing on screen
+        return Promise.resolve({ data: null, status: 0, statusText: "Logged out" });
+      }
+    }
+    
+    // Re-throw the error so it can be handled by the calling code if needed
+    return Promise.reject(error);
+  }
+);
 
 export default client;

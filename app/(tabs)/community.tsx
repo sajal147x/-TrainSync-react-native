@@ -65,25 +65,38 @@ const Community: React.FC = () => {
                 nestedScrollEnabled={true}
               >
                 {friends.map((friend) => (
-                  <View key={friend.userId} style={styles.friendCard}>
-                    <BlurView intensity={60} tint="dark" style={styles.friendCardBlur}>
-                      <View style={styles.friendCardContent}>
-                        {friend.profilePictureUrl ? (
-                          <Image
-                            source={{ uri: friend.profilePictureUrl }}
-                            style={styles.profilePicture}
-                          />
-                        ) : (
-                          <View style={styles.profilePicturePlaceholder}>
-                            <Text style={styles.profilePictureText}>
-                              {friend.name.charAt(0).toUpperCase()}
-                            </Text>
-                          </View>
-                        )}
-                        <Text style={styles.friendName}>{friend.name}</Text>
-                      </View>
-                    </BlurView>
-                  </View>
+                  <Link
+                    key={friend.userId}
+                    href={{
+                      pathname: "/community/FriendDetails",
+                      params: {
+                        userId: friend.userId,
+                        name: friend.name,
+                        profilePictureUrl: friend.profilePictureUrl || "",
+                      },
+                    }}
+                    asChild
+                  >
+                    <TouchableOpacity style={styles.friendCard} activeOpacity={0.8}>
+                      <BlurView intensity={60} tint="dark" style={styles.friendCardBlur}>
+                        <View style={styles.friendCardContent}>
+                          {friend.profilePictureUrl ? (
+                            <Image
+                              source={{ uri: friend.profilePictureUrl }}
+                              style={styles.profilePicture}
+                            />
+                          ) : (
+                            <View style={styles.profilePicturePlaceholder}>
+                              <Text style={styles.profilePictureText}>
+                                {friend.name.charAt(0).toUpperCase()}
+                              </Text>
+                            </View>
+                          )}
+                          <Text style={styles.friendName}>{friend.name}</Text>
+                        </View>
+                      </BlurView>
+                    </TouchableOpacity>
+                  </Link>
                 ))}
               </ScrollView>
             )}
