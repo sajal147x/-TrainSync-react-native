@@ -1,10 +1,46 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import storage from "./api/storage";
 
 export default function Index() {
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if user is already logged in (has stored token)
+    const checkAuthStatus = async () => {
+      try {
+        const token = await storage.getItemAsync("jwt");
+        if (token) {
+          // User is logged in, redirect to home
+          router.replace("/(tabs)/home");
+        } else {
+          // No token found, show sign-in options
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Error checking auth status:", error);
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, [router]);
+
+  // Show loading indicator while checking auth status
+  if (isLoading) {
+    return (
+      <LinearGradient colors={["#0d1117", "#1a1f29"]} style={styles.container}>
+        <View style={styles.content}>
+          <ActivityIndicator size="large" color="#2563eb" />
+        </View>
+      </LinearGradient>
+    );
+  }
+
   return (
     <LinearGradient colors={["#0d1117", "#1a1f29"]} style={styles.container}>
       <View style={styles.content}>
