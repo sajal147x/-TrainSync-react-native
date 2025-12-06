@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -22,6 +23,7 @@ const ContinueWorkout: React.FC = () => {
   const workoutId = params.workoutId as string;
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -75,7 +77,12 @@ const ContinueWorkout: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.title}>{workout?.workoutName || "Workout"}</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity
+          style={styles.optionsButton}
+          onPress={() => setShowOptionsModal(true)}
+        >
+          <Ionicons name="ellipsis-horizontal" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
@@ -163,6 +170,58 @@ const ContinueWorkout: React.FC = () => {
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Options Modal */}
+      <Modal
+        visible={showOptionsModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowOptionsModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowOptionsModal(false)}
+        >
+          <View style={styles.modalBackdrop} />
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={styles.modalContent}
+          >
+            <SafeAreaView edges={["top", "bottom"]} style={styles.modalSafeArea}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Options</Text>
+                <TouchableOpacity
+                  onPress={() => setShowOptionsModal(false)}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.modalBody}>
+                <TouchableOpacity
+                  style={styles.modalOptionButton}
+                  onPress={() => {
+                    setShowOptionsModal(false);
+                    router.push({
+                      pathname: "/workout/convertWorkoutToPreMade" as any,
+                      params: {
+                        workoutId,
+                        workoutName: workout?.workoutName || "",
+                      },
+                    });
+                  }}
+                >
+                  <Ionicons name="copy-outline" size={24} color="#3b82f6" />
+                  <Text style={styles.modalOptionText}>Convert to Pre Made Workout</Text>
+                </TouchableOpacity>
+              </View>
+            </SafeAreaView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -191,6 +250,72 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 40,
+  },
+  optionsButton: {
+    padding: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "transparent",
+  },
+  modalContent: {
+    backgroundColor: "#0d1117",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    minHeight: 200,
+    maxHeight: "50%",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  modalSafeArea: {
+    flex: 1,
+    minHeight: 150,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#111827",
+  },
+  modalTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "700",
+  },
+  closeButton: {
+    padding: 8,
+  },
+  modalBody: {
+    padding: 24,
+    minHeight: 100,
+  },
+  modalOptionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(31, 41, 55, 0.6)",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.2)",
+    gap: 12,
+  },
+  modalOptionText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   content: {
     flex: 1,

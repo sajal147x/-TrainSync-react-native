@@ -157,3 +157,23 @@ export async function switchExerciseInPreMadeWorkout(
   await client.post("/switch-exercise-in-pre-made", request);
 }
 
+export interface ConvertWorkoutToPreMadeDto {
+  workoutId: string;
+  name: string;
+}
+
+/**
+ * Creates a pre-made workout from an existing workout.
+ * Returns the pre-made workout ID.
+ * Sends ConvertWorkoutToPreMadeDto in the request body.
+ */
+export async function createPreMadeWorkoutFromExistingWorkout(
+  request: ConvertWorkoutToPreMadeDto
+): Promise<string> {
+  const response = await client.post<string>(
+    "/createPreMadeWorkoutFromExistingWorkout",
+    request
+  );
+  return response.data;
+}
+
