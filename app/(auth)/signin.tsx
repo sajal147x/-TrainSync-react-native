@@ -37,9 +37,10 @@ export default function SignIn() {
         return;
       }
       
-      // Store JWT token in SecureStore (via storage utility)
-      // Response format: { userId, username, accessToken }
+      // Store JWT token and refresh token in SecureStore (via storage utility)
+      // Response format: { userId, username, accessToken, refreshToken }
       await storage.setItemAsync("jwt", response.data.accessToken);
+      await storage.setItemAsync("refreshToken", response.data.refreshToken);
 
       router.replace("/(tabs)/home");
     } catch (error: any) {

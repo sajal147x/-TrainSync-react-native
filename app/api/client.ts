@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { router } from "expo-router";
 import storage from "./storage";
 
@@ -21,8 +21,11 @@ client.interceptors.request.use(async (config) => {
       config.headers = {} as any;
     }
     
-    // Don't attach JWT token for auth endpoints (signin/signup)
-    const isAuthEndpoint = config.url?.includes("/auth/signin") || config.url?.includes("/auth/signup");
+    // Don't attach JWT token for auth endpoints (signin/signup/refresh)
+    const isAuthEndpoint = 
+      config.url?.includes("/auth/signin") || 
+      config.url?.includes("/auth/signup") ||
+      config.url?.includes("/auth/refresh");
     
     if (!isAuthEndpoint) {
       const stored = await storage.getItemAsync("jwt");
@@ -61,36 +64,100 @@ client.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Response interceptor to handle API failures and logout user
+// Response interceptor to handle API failures, token refresh, and logout user
 client.interceptors.response.use(
   (response) => {
     // If response is successful, just return it
     return response;
   },
-  async (error) => {
-    // Don't logout for signin/signup endpoints (they naturally can fail)
-    const isAuthEndpoint = 
-      error.config?.url?.includes("/auth/signin") || 
-      error.config?.url?.includes("/auth/signup");
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { 
+      _tokenRefreshed?: boolean; 
+      _retryCount?: number;
+    };
     
-    if (!isAuthEndpoint) {
-      // Check for any API failure:
-      // 1. Network errors (can't reach server)
-      // 2. 401 Unauthorized (invalid/expired token)
-      // 3. Any other error response from server
-      const shouldLogout = 
-        error.code === "ERR_NETWORK" || // Network error
-        !error.response ||               // No response from server
-        error.response?.status === 401;  // Unauthorized
+    // Don't handle auth endpoints (signin/signup/refresh) - they naturally can fail
+    const isAuthEndpoint = 
+      originalRequest?.url?.includes("/auth/signin") || 
+      originalRequest?.url?.includes("/auth/signup") ||
+      originalRequest?.url?.includes("/auth/refresh");
+    
+    if (!isAuthEndpoint && originalRequest) {
+      // Try token refresh for any non-200 response (only once)
+      const statusCode = error.response?.status;
+      const isNot200 = statusCode !== undefined && statusCode !== 200;
       
-      if (shouldLogout) {
+      if (isNot200 && !originalRequest._tokenRefreshed) {
+        originalRequest._tokenRefreshed = true; // Mark that we've attempted token refresh
+        
+        try {
+          // Get refresh token from storage
+          const storedRefreshToken = await storage.getItemAsync("refreshToken");
+          
+          if (!storedRefreshToken) {
+            throw new Error("No refresh token available");
+          }
+          
+          // Attempt to refresh the access token using a direct axios call to avoid circular dependency
+          const refreshResponse = await axios.post(
+            `${API_BASE}/auth/refresh`,
+            { refreshToken: storedRefreshToken },
+            {
+              validateStatus: (status) => status < 500, // Don't throw for 4xx errors
+            }
+          );
+          
+          // Check if refresh was successful
+          if (refreshResponse.status === 200 && refreshResponse.data?.accessToken) {
+            // Update stored tokens
+            await storage.setItemAsync("jwt", refreshResponse.data.accessToken);
+            if (refreshResponse.data.refreshToken) {
+              await storage.setItemAsync("refreshToken", refreshResponse.data.refreshToken);
+            }
+            
+            // Update the original request with the new access token
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.accessToken}`;
+            }
+            
+            // Retry the original request with the new token
+            return client(originalRequest);
+          } else {
+            throw new Error("Token refresh failed");
+          }
+        } catch (refreshError) {
+          // Refresh failed - if it was a 401, logout user; otherwise continue with original error
+          if (error.response?.status === 401) {
+            console.log("Token refresh failed - logging out user");
+            
+            // Clear stored tokens
+            try {
+              await storage.deleteItemAsync("jwt");
+              await storage.deleteItemAsync("refreshToken");
+            } catch (storageError) {
+              console.error("Error clearing tokens:", storageError);
+            }
+            
+            // Redirect to signin page
+            router.replace("/(auth)/signin");
+            
+            // Don't re-throw the error to prevent it from showing on screen
+            return Promise.resolve({ data: null, status: 0, statusText: "Logged out" });
+          }
+          // For other errors, continue to re-throw the original error
+        }
+      }
+      
+      // Handle logout for network errors
+      if (error.code === "ERR_NETWORK" || !error.response) {
         console.log("API failure detected - logging out user");
         
-        // Clear the stored JWT token
+        // Clear the stored tokens
         try {
           await storage.deleteItemAsync("jwt");
+          await storage.deleteItemAsync("refreshToken");
         } catch (storageError) {
-          console.error("Error clearing JWT:", storageError);
+          console.error("Error clearing tokens:", storageError);
         }
         
         // Redirect to signin page

@@ -53,8 +53,9 @@ export default function SignUp() {
         return;
       }
       
-      // Store JWT token in secure store only if successful
+      // Store JWT token and refresh token in secure store only if successful
       await storage.setItemAsync("jwt", response.data.accessToken);
+      await storage.setItemAsync("refreshToken", response.data.refreshToken);
 
       alert(`Signup successful for ${username}`);
       router.replace("/(tabs)/home");

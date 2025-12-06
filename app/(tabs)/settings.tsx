@@ -137,6 +137,7 @@ export default function Settings() {
   const handleLogout = async () => {
   try {
     await storage.deleteItemAsync("jwt"); // remove your JWT
+    await storage.deleteItemAsync("refreshToken"); // remove your refresh token
     // Optionally, navigate to login
     router.replace("../(auth)/signin");
   } catch (err) {
