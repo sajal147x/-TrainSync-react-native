@@ -30,7 +30,24 @@ const Community: React.FC = () => {
       <View style={styles.content}>
         <Text style={styles.title}>Community</Text>
         
-        <Link href="/community/addFriend" asChild>
+        <View style={styles.buttonsRow}>
+          <Link href="/community/addFriend" asChild>
+            <TouchableOpacity style={styles.buttonContainer} activeOpacity={0.8}>
+              <BlurView intensity={80} tint="dark" style={styles.blurView}>
+                <LinearGradient
+                  colors={["rgba(59, 130, 246, 0.2)", "rgba(59, 130, 246, 0.1)", "rgba(59, 130, 246, 0.2)"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientOverlay}
+                >
+                  <View style={styles.buttonInner}>
+                    <Text style={styles.buttonText}>Add Friend</Text>
+                  </View>
+                </LinearGradient>
+              </BlurView>
+            </TouchableOpacity>
+          </Link>
+
           <TouchableOpacity style={styles.buttonContainer} activeOpacity={0.8}>
             <BlurView intensity={80} tint="dark" style={styles.blurView}>
               <LinearGradient
@@ -40,15 +57,15 @@ const Community: React.FC = () => {
                 style={styles.gradientOverlay}
               >
                 <View style={styles.buttonInner}>
-                  <Text style={styles.buttonText}>Add Friend</Text>
+                  <Text style={styles.buttonText}>Create Group</Text>
                 </View>
               </LinearGradient>
             </BlurView>
           </TouchableOpacity>
-        </Link>
+        </View>
 
         <View style={styles.friendsSection}>
-          <Text style={styles.sectionTitle}>Friends</Text>
+          <Text style={styles.sectionTitle}>Friends ({friends.length})</Text>
           <View style={styles.friendsListContainer}>
             {loading ? (
               <View style={styles.loadingContainer}>
@@ -77,24 +94,20 @@ const Community: React.FC = () => {
                     }}
                     asChild
                   >
-                    <TouchableOpacity style={styles.friendCard} activeOpacity={0.8}>
-                      <BlurView intensity={60} tint="dark" style={styles.friendCardBlur}>
-                        <View style={styles.friendCardContent}>
-                          {friend.profilePictureUrl ? (
-                            <Image
-                              source={{ uri: friend.profilePictureUrl }}
-                              style={styles.profilePicture}
-                            />
-                          ) : (
-                            <View style={styles.profilePicturePlaceholder}>
-                              <Text style={styles.profilePictureText}>
-                                {friend.name.charAt(0).toUpperCase()}
-                              </Text>
-                            </View>
-                          )}
-                          <Text style={styles.friendName}>{friend.name}</Text>
+                    <TouchableOpacity style={styles.friendItem} activeOpacity={0.7}>
+                      {friend.profilePictureUrl ? (
+                        <Image
+                          source={{ uri: friend.profilePictureUrl }}
+                          style={styles.profilePicture}
+                        />
+                      ) : (
+                        <View style={styles.profilePicturePlaceholder}>
+                          <Text style={styles.profilePictureText}>
+                            {friend.name.charAt(0).toUpperCase()}
+                          </Text>
                         </View>
-                      </BlurView>
+                      )}
+                      <Text style={styles.friendName}>{friend.name}</Text>
                     </TouchableOpacity>
                   </Link>
                 ))}
@@ -124,7 +137,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textAlign: "center",
   },
+  buttonsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 32,
+  },
   buttonContainer: {
+    flex: 1,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
@@ -134,15 +153,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
-    marginBottom: 32,
   },
   blurView: {
     borderRadius: 16,
     overflow: "hidden",
   },
   gradientOverlay: {
-    paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 16,
   },
   buttonInner: {
@@ -151,7 +169,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
@@ -167,9 +185,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   friendsListContainer: {
-    maxHeight: 400,
-    borderRadius: 16,
-    overflow: "hidden",
+    maxHeight: 300,
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    borderRadius: 12,
+    padding: 12,
   },
   friendsScrollView: {
     flexGrow: 0,
@@ -188,39 +209,25 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     fontSize: 14,
   },
-  friendCard: {
-    marginBottom: 12,
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.3)",
-  },
-  friendCardBlur: {
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: "rgba(22, 27, 34, 0.6)",
-  },
-  friendCardContent: {
+  friendItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
     gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(156, 163, 175, 0.3)",
   },
   profilePicture: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "rgba(59, 130, 246, 0.2)",
-    borderWidth: 2,
-    borderColor: "rgba(59, 130, 246, 0.4)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   profilePicturePlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "rgba(59, 130, 246, 0.3)",
-    borderWidth: 2,
-    borderColor: "rgba(59, 130, 246, 0.4)",
     alignItems: "center",
     justifyContent: "center",
   },

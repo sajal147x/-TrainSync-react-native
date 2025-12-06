@@ -198,36 +198,38 @@ export default function Settings() {
 
       {user ? (
         <>
-          <View style={styles.field}>
-            <Text style={styles.label}>Name</Text>
-            {isEditing ? (
-              <TextInput
-                style={[styles.input, styles.inputEditable]}
-                value={name}
-                onChangeText={setName}
-              />
-            ) : (
-              <Text style={styles.value}>{user.name}</Text>
-            )}
-          </View>
+          <View style={styles.fieldsContainer}>
+            <View style={styles.field}>
+              <Text style={styles.label}>Name</Text>
+              {isEditing ? (
+                <TextInput
+                  style={[styles.input, styles.inputEditable]}
+                  value={name}
+                  onChangeText={setName}
+                />
+              ) : (
+                <Text style={styles.value}>{user.name}</Text>
+              )}
+            </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Username</Text>
-            <Text style={styles.value}>{user.username}</Text>
-          </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>Username</Text>
+              <Text style={styles.value}>{user.username}</Text>
+            </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Age</Text>
-            {isEditing ? (
-              <TextInput
-                style={[styles.input, styles.inputEditable]}
-                value={age}
-                onChangeText={setAge}
-                keyboardType="numeric"
-              />
-            ) : (
-              <Text style={styles.value}>{user.age || "N/A"}</Text>
-            )}
+            <View style={styles.fieldLast}>
+              <Text style={styles.label}>Age</Text>
+              {isEditing ? (
+                <TextInput
+                  style={[styles.input, styles.inputEditable]}
+                  value={age}
+                  onChangeText={setAge}
+                  keyboardType="numeric"
+                />
+              ) : (
+                <Text style={styles.value}>{user.age || "N/A"}</Text>
+              )}
+            </View>
           </View>
 
           {isEditing && (
@@ -279,45 +281,44 @@ export default function Settings() {
 
           {/* Admin Button - Only visible for ADMIN users */}
           {user?.userType === "ADMIN" && (
-            <>
+            <View style={styles.adminButtonsRow}>
               <TouchableOpacity
-                style={styles.liquidGlassButton}
+                style={styles.adminButtonContainer}
                 onPress={() => router.push("../admin/configureExerciseLibrary")}
                 activeOpacity={0.8}
               >
                 <BlurView intensity={80} tint="dark" style={styles.blurView}>
                   <LinearGradient
-                    colors={["rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.08)", "rgba(59, 130, 246, 0.15)"]}
+                    colors={["rgba(59, 130, 246, 0.2)", "rgba(59, 130, 246, 0.1)", "rgba(59, 130, 246, 0.2)"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.gradientOverlay}
                   >
                     <View style={styles.buttonInner}>
-                      <Text style={styles.liquidGlassButtonText}>Configure Exercise Library</Text>
+                      <Text style={styles.adminButtonText}>Configure Library</Text>
                     </View>
                   </LinearGradient>
                 </BlurView>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.liquidGlassButton}
+                style={styles.adminButtonContainer}
                 onPress={() => router.push("../admin/EditExerciseLibrary")}
                 activeOpacity={0.8}
               >
                 <BlurView intensity={80} tint="dark" style={styles.blurView}>
                   <LinearGradient
-                    colors={["rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.08)", "rgba(59, 130, 246, 0.15)"]}
+                    colors={["rgba(59, 130, 246, 0.2)", "rgba(59, 130, 246, 0.1)", "rgba(59, 130, 246, 0.2)"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.gradientOverlay}
                   >
                     <View style={styles.buttonInner}>
-                      <Text style={styles.liquidGlassButtonText}>Edit Existing Exercise</Text>
+                      <Text style={styles.adminButtonText}>Edit Exercise</Text>
                     </View>
                   </LinearGradient>
                 </BlurView>
               </TouchableOpacity>
-   
-            </>
+            </View>
           )}
 
           {/* Log Out Button */}
@@ -368,11 +369,23 @@ const styles = StyleSheet.create({
   editIconButton: {
     padding: 8,
   },
+  fieldsContainer: {
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 24,
+  },
   field: {
     paddingVertical: 12,
-    marginBottom: 12,
+    paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: "#111827",
+    borderBottomColor: "rgba(156, 163, 175, 0.3)",
+  },
+  fieldLast: {
+    paddingVertical: 12,
+    paddingHorizontal: 4,
   },
   label: { fontSize: 16, color: "#cbd5e1", marginBottom: 6, fontWeight: "700" },
   value: { fontSize: 16, color: "#f1f5f9", paddingVertical: 8 },
@@ -490,5 +503,30 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 10,
+  },
+  adminButtonsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+  adminButtonContainer: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  adminButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });

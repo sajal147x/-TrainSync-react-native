@@ -81,41 +81,53 @@ const Workout: React.FC = () => {
         <View style={styles.recentWorkoutsContainer}>
           <Text style={styles.recentWorkoutsTitle}>Recent Workouts</Text>
           
-          {loading ? (
-            <ActivityIndicator size="large" color="#3b82f6" style={styles.loader} />
-          ) : error ? (
-            <Text style={styles.errorText}>{error}</Text>
-          ) : recentWorkouts.length === 0 ? (
-            <Text style={styles.emptyText}>No recent workouts found</Text>
-          ) : (
-            <FlatList
-              data={recentWorkouts}
-              keyExtractor={(item) => item.workoutId}
-              renderItem={({ item }) => (
-                <View style={styles.workoutCard}>
-                  <BlurView intensity={60} tint="dark" style={styles.cardBlur}>
-                    <View style={styles.cardContent}>
-                      <View style={styles.workoutInfo}>
-                        <Text style={styles.workoutName}>{item.workoutName}</Text>
-                        <Text style={styles.workoutDate}>{formatDate(item.workoutDate)}</Text>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.editButton}
-                        onPress={() => router.push({
-                          pathname: "/workout/continue",
-                          params: { workoutId: item.workoutId }
-                        })}
-                      >
-                        <Ionicons name="create-outline" size={24} color="#3b82f6" />
-                      </TouchableOpacity>
+          <View style={styles.workoutsListContainer}>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color="#fff" size="small" />
+              </View>
+            ) : error ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : recentWorkouts.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No recent workouts found</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={recentWorkouts}
+                keyExtractor={(item) => item.workoutId}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.workoutItem}
+                    activeOpacity={0.7}
+                    onPress={() => router.push({
+                      pathname: "/workout/continue",
+                      params: { workoutId: item.workoutId }
+                    })}
+                  >
+                    <View style={styles.workoutInfo}>
+                      <Text style={styles.workoutName}>{item.workoutName}</Text>
+                      <Text style={styles.workoutDate}>{formatDate(item.workoutDate)}</Text>
                     </View>
-                  </BlurView>
-                </View>
-              )}
-              style={styles.workoutList}
-              contentContainerStyle={styles.workoutListContent}
-            />
-          )}
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => router.push({
+                        pathname: "/workout/continue",
+                        params: { workoutId: item.workoutId }
+                      })}
+                    >
+                      <Ionicons name="create-outline" size={24} color="#3b82f6" />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                )}
+                style={styles.workoutList}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
+              />
+            )}
+          </View>
         </View>
       </View>
     </View>
@@ -179,46 +191,48 @@ const styles = StyleSheet.create({
   recentWorkoutsTitle: {
     color: "#fff",
     fontSize: 20,
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: 16,
   },
-  loader: {
-    marginTop: 32,
+  workoutsListContainer: {
+    maxHeight: 300,
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    borderRadius: 12,
+    padding: 12,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
   },
   errorText: {
     color: "#ef4444",
     fontSize: 14,
     textAlign: "center",
-    marginTop: 16,
   },
   emptyText: {
     color: "#6b7280",
     fontSize: 14,
     textAlign: "center",
-    marginTop: 16,
   },
   workoutList: {
-    flex: 1,
+    flexGrow: 0,
   },
-  workoutListContent: {
-    paddingBottom: 24,
-  },
-  workoutCard: {
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.2)",
-  },
-  cardBlur: {
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  cardContent: {
-    padding: 16,
+  workoutItem: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(156, 163, 175, 0.3)",
   },
   workoutInfo: {
     flex: 1,
