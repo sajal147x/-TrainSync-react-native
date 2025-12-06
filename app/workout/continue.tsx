@@ -87,13 +87,22 @@ const ContinueWorkout: React.FC = () => {
 
       <View style={styles.content}>
         <View style={styles.exercisesContainer}>
-          <Text style={styles.sectionTitle}>Exercises</Text>
-          <ScrollView style={styles.exercisesList} showsVerticalScrollIndicator={false}>
-            {workout?.exercises && workout.exercises.length > 0 ? (
-              [...workout.exercises]
-                .sort((a, b) => (a.exerciseOrder || 0) - (b.exerciseOrder || 0))
-                .map((exercise, index) => (
-                <View key={index} style={styles.exerciseItem}>
+          <Text style={styles.sectionTitle}>
+            Exercises ({workout?.exercises?.length || 0})
+          </Text>
+          <View style={styles.exercisesListWrapper}>
+            <ScrollView style={styles.exercisesList} showsVerticalScrollIndicator={false}>
+              {workout?.exercises && workout.exercises.length > 0 ? (
+                [...workout.exercises]
+                  .sort((a, b) => (a.exerciseOrder || 0) - (b.exerciseOrder || 0))
+                  .map((exercise, index, array) => (
+                  <View 
+                    key={index} 
+                    style={[
+                      styles.exerciseItem,
+                      index < array.length - 1 && styles.exerciseItemWithBorder
+                    ]}
+                  >
                   {exercise.exercisePictureUrl ? (
                     <Image
                       source={{ uri: exercise.exercisePictureUrl }}
@@ -124,51 +133,54 @@ const ContinueWorkout: React.FC = () => {
                   >
                     <Ionicons name="create-outline" size={20} color="#3b82f6" />
                   </TouchableOpacity>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>No exercises added yet</Text>
                 </View>
-              ))
-            ) : (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>No exercises added yet</Text>
-              </View>
-            )}
-          </ScrollView>
+              )}
+            </ScrollView>
+          </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.continueButton}
-          activeOpacity={0.8}
-          onPress={() => router.push({
-            pathname: "/workout/exercise-selection",
-            params: {
-              workoutId,
-            }
-          })}
-        >
-          <BlurView intensity={80} tint="dark" style={styles.blurView}>
-            <LinearGradient
-              colors={[
-                "rgba(59, 130, 246, 0.2)",
-                "rgba(59, 130, 246, 0.1)",
-                "rgba(59, 130, 246, 0.2)",
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientOverlay}
-            >
-              <View style={styles.buttonInner}>
-                <Ionicons name="add-circle-outline" size={24} color="#fff" />
-                <Text style={styles.buttonText}>Add Another Exercise</Text>
-              </View>
-            </LinearGradient>
-          </BlurView>
-        </TouchableOpacity>
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity
+            style={styles.continueButton}
+            activeOpacity={0.8}
+            onPress={() => router.push({
+              pathname: "/workout/exercise-selection",
+              params: {
+                workoutId,
+              }
+            })}
+          >
+            <BlurView intensity={80} tint="dark" style={styles.blurView}>
+              <LinearGradient
+                colors={[
+                  "rgba(59, 130, 246, 0.2)",
+                  "rgba(59, 130, 246, 0.1)",
+                  "rgba(59, 130, 246, 0.2)",
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientOverlay}
+              >
+                <View style={styles.buttonInner}>
+                  <Ionicons name="add-circle-outline" size={24} color="#fff" />
+                  <Text style={styles.buttonText}>Add Another Exercise</Text>
+                </View>
+              </LinearGradient>
+            </BlurView>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.doneButton}
-          onPress={() => router.push("/(tabs)/workout")}
-        >
-          <Text style={styles.doneButtonText}>Done</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.doneButton}
+            onPress={() => router.push("/(tabs)/workout")}
+          >
+            <Text style={styles.doneButtonText}>Done</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Options Modal */}
@@ -321,15 +333,18 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 24,
-    justifyContent: "space-between",
     paddingBottom: 32,
+  },
+  buttonsContainer: {
+    marginTop: 24,
+    gap: 12,
   },
   centerContent: {
     justifyContent: "center",
     alignItems: "center",
   },
   exercisesContainer: {
-    flex: 1,
+    alignSelf: "stretch",
   },
   sectionTitle: {
     color: "#fff",
@@ -337,37 +352,46 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 16,
   },
+  exercisesListWrapper: {
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    borderRadius: 12,
+    overflow: "hidden",
+    maxHeight: 400,
+    padding: 12,
+  },
   exercisesList: {
-    flex: 1,
+    // ScrollView will size to content, constrained by parent maxHeight
   },
   exerciseItem: {
-    backgroundColor: "rgba(31, 41, 55, 0.6)",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.2)",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 16,
+  },
+  exerciseItemWithBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(156, 163, 175, 0.3)",
   },
   exerciseNumber: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: "rgba(59, 130, 246, 0.2)",
     justifyContent: "center",
     alignItems: "center",
   },
   exerciseNumberText: {
     color: "#3b82f6",
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: "700",
   },
   exerciseImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: "rgba(59, 130, 246, 0.2)",
   },
   exerciseName: {
@@ -425,16 +449,16 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   doneButton: {
-    backgroundColor: "rgba(31, 41, 55, 0.6)",
+    backgroundColor: "#3b82f6",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.2)",
+    borderColor: "rgba(59, 130, 246, 0.4)",
     alignItems: "center",
   },
   doneButtonText: {
-    color: "#9ca3af",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
