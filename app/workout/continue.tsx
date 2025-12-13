@@ -229,6 +229,17 @@ const ContinueWorkout: React.FC = () => {
                   <Ionicons name="copy-outline" size={24} color="#3b82f6" />
                   <Text style={styles.modalOptionText}>Convert to Pre Made Workout</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalOptionButton, styles.modalOptionButtonWithMargin]}
+                  onPress={() => {
+                    setShowOptionsModal(false);
+                    // TODO: Implement functionality
+                  }}
+                >
+                  <Ionicons name="play-outline" size={24} color="#3b82f6" />
+                  <Text style={styles.modalOptionText}>Start new Workout with same exercises</Text>
+                </TouchableOpacity>
               </View>
             </SafeAreaView>
           </TouchableOpacity>
@@ -279,8 +290,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0d1117",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    minHeight: 200,
-    maxHeight: "50%",
+    height: "50%",
     width: "100%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
@@ -317,12 +327,13 @@ const styles = StyleSheet.create({
   modalOptionButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(31, 41, 55, 0.6)",
-    borderRadius: 12,
     padding: 16,
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.2)",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(156, 163, 175, 0.3)",
     gap: 12,
+  },
+  modalOptionButtonWithMargin: {
+    marginTop: 12,
   },
   modalOptionText: {
     color: "#fff",
