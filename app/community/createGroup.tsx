@@ -5,6 +5,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { getFriendsForUser, FriendsResponseDto } from "../api/community";
+import { createGroup } from "../api/friendGroup";
 
 const CreateGroup: React.FC = () => {
   const router = useRouter();
@@ -12,6 +13,7 @@ const CreateGroup: React.FC = () => {
   const [friends, setFriends] = useState<FriendsResponseDto[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchFriends();
@@ -41,9 +43,33 @@ const CreateGroup: React.FC = () => {
     });
   };
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
+    // Validate inputs
+    if (!groupName.trim()) {
+      console.error("Group name is required");
+      return;
+    }
+
     const friendIds = Array.from(selectedFriends);
-    
+    if (friendIds.length === 0) {
+      console.error("At least one friend must be selected");
+      return;
+    }
+
+    try {
+      setCreating(true);
+      const groupId = await createGroup({
+        groupName: groupName.trim(),
+        memberIds: friendIds,
+      });
+      console.log("Group created successfully with ID:", groupId);
+      // Navigate back on success
+      router.back();
+    } catch (error: any) {
+      console.error("Error creating group:", error);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -127,9 +153,10 @@ const CreateGroup: React.FC = () => {
 
         {/* Create Group Button */}
         <TouchableOpacity
-          style={styles.createButtonContainer}
+          style={[styles.createButtonContainer, creating && styles.createButtonDisabled]}
           onPress={handleCreateGroup}
           activeOpacity={0.8}
+          disabled={creating}
         >
           <BlurView intensity={80} tint="dark" style={styles.blurView}>
             <LinearGradient
@@ -139,7 +166,11 @@ const CreateGroup: React.FC = () => {
               style={styles.gradientOverlay}
             >
               <View style={styles.buttonInner}>
-                <Text style={styles.buttonText}>Create Group</Text>
+                {creating ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.buttonText}>Create Group</Text>
+                )}
               </View>
             </LinearGradient>
           </BlurView>
@@ -317,6 +348,9 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  createButtonDisabled: {
+    opacity: 0.6,
   },
 });
 

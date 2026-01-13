@@ -4,24 +4,40 @@ import { Link } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { getFriendsForUser, FriendsResponseDto } from "../api/community";
+import { getGroupsForUser, FriendGroupSummaryDto } from "../api/friendGroup";
 
 const Community: React.FC = () => {
   const [friends, setFriends] = useState<FriendsResponseDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [groups, setGroups] = useState<FriendGroupSummaryDto[]>([]);
+  const [friendsLoading, setFriendsLoading] = useState(true);
+  const [groupsLoading, setGroupsLoading] = useState(true);
 
   useEffect(() => {
     fetchFriends();
+    fetchGroups();
   }, []);
 
   const fetchFriends = async () => {
     try {
-      setLoading(true);
+      setFriendsLoading(true);
       const friendsList = await getFriendsForUser();
       setFriends(friendsList);
     } catch (error: any) {
       console.error("Error fetching friends:", error);
     } finally {
-      setLoading(false);
+      setFriendsLoading(false);
+    }
+  };
+
+  const fetchGroups = async () => {
+    try {
+      setGroupsLoading(true);
+      const groupsList = await getGroupsForUser();
+      setGroups(groupsList);
+    } catch (error: any) {
+      console.error("Error fetching groups:", error);
+    } finally {
+      setGroupsLoading(false);
     }
   };
 
@@ -69,7 +85,7 @@ const Community: React.FC = () => {
         <View style={styles.friendsSection}>
           <Text style={styles.sectionTitle}>Friends ({friends.length})</Text>
           <View style={styles.friendsListContainer}>
-            {loading ? (
+            {friendsLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator color="#fff" size="small" />
               </View>
@@ -112,6 +128,45 @@ const Community: React.FC = () => {
                       <Text style={styles.friendName}>{friend.name}</Text>
                     </TouchableOpacity>
                   </Link>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.groupsSection}>
+          <Text style={styles.sectionTitle}>Groups ({groups.length})</Text>
+          <View style={styles.groupsListContainer}>
+            {groupsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color="#fff" size="small" />
+              </View>
+            ) : groups.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No groups yet</Text>
+              </View>
+            ) : (
+              <ScrollView 
+                style={styles.groupsScrollView}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
+              >
+                {groups.map((group) => (
+                  <TouchableOpacity key={group.groupId} style={styles.groupItem} activeOpacity={0.7}>
+                    {group.profilePictureUrl ? (
+                      <Image
+                        source={{ uri: group.profilePictureUrl }}
+                        style={styles.profilePicture}
+                      />
+                    ) : (
+                      <View style={styles.profilePicturePlaceholder}>
+                        <Text style={styles.profilePictureText}>
+                          {group.groupName.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
+                    <Text style={styles.groupName}>{group.groupName}</Text>
+                  </TouchableOpacity>
                 ))}
               </ScrollView>
             )}
@@ -239,6 +294,35 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   friendName: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    flex: 1,
+  },
+  groupsSection: {
+    marginTop: 32,
+  },
+  groupsListContainer: {
+    maxHeight: 300,
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    borderRadius: 12,
+    padding: 12,
+  },
+  groupsScrollView: {
+    flexGrow: 0,
+  },
+  groupItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(156, 163, 175, 0.3)",
+  },
+  groupName: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
