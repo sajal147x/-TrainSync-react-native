@@ -143,3 +143,16 @@ export async function changeExerciseInWorkout(
   );
 }
 
+export interface DeleteExerciseInWorkoutRequest {
+  exerciseId: string;
+}
+
+export async function deleteExerciseInWorkout(
+  request: DeleteExerciseInWorkoutRequest
+): Promise<void> {
+  await client.post(
+    "/delete-exercise-in-workout",
+    request
+  );
+}
+

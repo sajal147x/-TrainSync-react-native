@@ -10,13 +10,14 @@ import {
   Platform,
   ActivityIndicator,
   Image,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
-import { addSetToExercise, updateSetInExercise, deleteSet, SetDto, getSets } from "../api/workout";
+import { addSetToExercise, updateSetInExercise, deleteSet, SetDto, getSets, deleteExerciseInWorkout } from "../api/workout";
 
 interface Set {
   id: string;
@@ -43,6 +44,8 @@ const EditExercise: React.FC = () => {
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exerciseSelectionVisible, setExerciseSelectionVisible] = useState(false);
+  const [deletingExercise, setDeletingExercise] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
 
   // Format date from ISO format to "Nov 20, 2025" format
@@ -235,6 +238,36 @@ const EditExercise: React.FC = () => {
     });
   };
 
+  const handleDeleteExercise = () => {
+    setDeleteConfirmVisible(true);
+  };
+
+  const confirmDeleteExercise = async () => {
+    if (!workoutId) {
+      console.error("workoutId is required to delete exercise");
+      setDeleteConfirmVisible(false);
+      return;
+    }
+    try {
+      setDeletingExercise(true);
+      setDeleteConfirmVisible(false);
+      await deleteExerciseInWorkout({ exerciseId });
+      // Navigate back to continue page
+      router.push({
+        pathname: "/workout/continue",
+        params: {
+          workoutId: workoutId,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to delete exercise:", error);
+      setDeleteConfirmVisible(false);
+      // Show error - you might want to add an error dialog here too
+    } finally {
+      setDeletingExercise(false);
+    }
+  };
+
   const renderLeftActions = (id: string, set: Set) => {
     if (!set.isSaved) return null;
     
@@ -327,16 +360,33 @@ const EditExercise: React.FC = () => {
             <Text style={styles.title}>{exerciseName || "Edit Exercise"}</Text>
           </View>
           {workoutId ? (
-            <TouchableOpacity
-              style={styles.changeExerciseButton}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                handleChangeExercise();
-              }}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="swap-horizontal" size={20} color="#3b82f6" />
-            </TouchableOpacity>
+            <View style={styles.headerRightButtons}>
+              <TouchableOpacity
+                style={styles.changeExerciseButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  handleChangeExercise();
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="swap-horizontal" size={20} color="#3b82f6" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteExerciseButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  handleDeleteExercise();
+                }}
+                activeOpacity={0.8}
+                disabled={deletingExercise || deleteConfirmVisible}
+              >
+                {deletingExercise ? (
+                  <ActivityIndicator size="small" color="#ef4444" />
+                ) : (
+                  <Ionicons name="trash" size={20} color="#ef4444" />
+                )}
+              </TouchableOpacity>
+            </View>
           ) : (
             <View style={styles.placeholder} />
           )}
@@ -502,6 +552,49 @@ const EditExercise: React.FC = () => {
           </View>
         </View>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Modal
+        visible={deleteConfirmVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setDeleteConfirmVisible(false)}
+      >
+        <View style={styles.deleteDialogOverlay}>
+          <TouchableOpacity
+            style={styles.deleteDialogBackdrop}
+            activeOpacity={1}
+            onPress={() => setDeleteConfirmVisible(false)}
+          />
+          <View style={styles.deleteDialogContent}>
+            <Text style={styles.deleteDialogTitle}>Delete Exercise</Text>
+            <Text style={styles.deleteDialogMessage}>
+              Are you sure you want to delete exercise?
+            </Text>
+            <View style={styles.deleteDialogButtons}>
+              <TouchableOpacity
+                style={styles.deleteDialogCancelButton}
+                onPress={() => setDeleteConfirmVisible(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.deleteDialogCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteDialogConfirmButton}
+                onPress={confirmDeleteExercise}
+                activeOpacity={0.8}
+                disabled={deletingExercise}
+              >
+                {deletingExercise ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.deleteDialogConfirmText}>Yes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -555,6 +648,11 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 40,
   },
+  headerRightButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   changeExerciseButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -565,6 +663,17 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(59, 130, 246, 0.15)",
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.3)",
+  },
+  deleteExerciseButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "rgba(239, 68, 68, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.3)",
   },
   changeExerciseButtonText: {
     color: "#3b82f6",
@@ -777,6 +886,77 @@ const styles = StyleSheet.create({
   enlargedImage: {
     width: "100%",
     height: "100%",
+  },
+  deleteDialogOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  deleteDialogBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  deleteDialogContent: {
+    backgroundColor: "#1f2937",
+    borderRadius: 16,
+    padding: 24,
+    width: "85%",
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.3)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  deleteDialogTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  deleteDialogMessage: {
+    color: "#9ca3af",
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  deleteDialogButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  deleteDialogCancelButton: {
+    flex: 1,
+    backgroundColor: "rgba(156, 163, 175, 0.2)",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(156, 163, 175, 0.3)",
+  },
+  deleteDialogCancelText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  deleteDialogConfirmButton: {
+    flex: 1,
+    backgroundColor: "#ef4444",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.5)",
+  },
+  deleteDialogConfirmText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
