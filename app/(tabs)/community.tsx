@@ -48,20 +48,22 @@ const Community: React.FC = () => {
             </TouchableOpacity>
           </Link>
 
-          <TouchableOpacity style={styles.buttonContainer} activeOpacity={0.8}>
-            <BlurView intensity={80} tint="dark" style={styles.blurView}>
-              <LinearGradient
-                colors={["rgba(59, 130, 246, 0.2)", "rgba(59, 130, 246, 0.1)", "rgba(59, 130, 246, 0.2)"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradientOverlay}
-              >
-                <View style={styles.buttonInner}>
-                  <Text style={styles.buttonText}>Create Group</Text>
-                </View>
-              </LinearGradient>
-            </BlurView>
-          </TouchableOpacity>
+          <Link href="/community/createGroup" asChild>
+            <TouchableOpacity style={styles.buttonContainer} activeOpacity={0.8}>
+              <BlurView intensity={80} tint="dark" style={styles.blurView}>
+                <LinearGradient
+                  colors={["rgba(59, 130, 246, 0.2)", "rgba(59, 130, 246, 0.1)", "rgba(59, 130, 246, 0.2)"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientOverlay}
+                >
+                  <View style={styles.buttonInner}>
+                    <Text style={styles.buttonText}>Create Group</Text>
+                  </View>
+                </LinearGradient>
+              </BlurView>
+            </TouchableOpacity>
+          </Link>
         </View>
 
         <View style={styles.friendsSection}>
