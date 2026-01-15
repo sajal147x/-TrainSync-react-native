@@ -6,7 +6,11 @@ import { Image } from 'expo-image';
 import { getGroupLeaderboard, GroupLeaderboardDto } from '../../api/community/friendGroup';
 
 export default function Leaderboard() {
-  const { groupName, groupId } = useLocalSearchParams<{ groupName: string; groupId: string }>();
+  const { groupName, groupId, profilePictureUrl } = useLocalSearchParams<{ 
+    groupName: string; 
+    groupId: string;
+    profilePictureUrl?: string;
+  }>();
   const router = useRouter();
   const [leaderboard, setLeaderboard] = useState<GroupLeaderboardDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +43,23 @@ export default function Leaderboard() {
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{groupName || 'Group'}</Text>
+        <View style={styles.headerTitleContainer}>
+          {profilePictureUrl ? (
+            <Image
+              source={{ uri: profilePictureUrl }}
+              style={styles.headerProfilePicture}
+              contentFit="cover"
+              cachePolicy="disk"
+            />
+          ) : (
+            <View style={styles.headerProfilePicturePlaceholder}>
+              <Text style={styles.headerProfilePictureText}>
+                {(groupName || 'G').charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <Text style={styles.headerTitle}>{groupName || 'Group'}</Text>
+        </View>
         <View style={styles.placeholder} />
       </View>
       <View style={styles.content}>
@@ -136,12 +156,40 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
+  headerTitleContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  headerProfilePicture: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    borderWidth: 2,
+    borderColor: 'rgba(59, 130, 246, 0.4)',
+  },
+  headerProfilePicturePlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(59, 130, 246, 0.3)',
+    borderWidth: 2,
+    borderColor: 'rgba(59, 130, 246, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerProfilePictureText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   headerTitle: {
     color: '#fff',
     fontSize: 20,
     fontWeight: '700',
-    flex: 1,
-    textAlign: 'center',
   },
   placeholder: {
     width: 40,
