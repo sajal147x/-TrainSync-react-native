@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, ActivityIndicator, ScrollView, Image, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { getCurrentUser, UserDetails } from "../api/user";
-import { getLoggedWorkouts, getMonthlyExerciseCountPerMuscle, MonthlyExerciseCountPerMuscleDto } from "../api/homeStats";
+import { getLoggedWorkouts, getMonthlyExerciseCountPerMuscle, MonthlyExerciseCountPerMuscleDto, getMostPerformedExercises, ExerciseCountDto } from "../api/homeStats";
 
 const Home: React.FC = () => {
+  const router = useRouter();
   const [user, setUser] = useState<UserDetails | null>(null);
   const [workoutsLogged, setWorkoutsLogged] = useState<number>(0);
   const [muscleGroupStats, setMuscleGroupStats] = useState<MonthlyExerciseCountPerMuscleDto[]>([]);
+  const [mostPerformedExercises, setMostPerformedExercises] = useState<ExerciseCountDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,14 +18,16 @@ const Home: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [userData, workoutsCount, muscleStats] = await Promise.all([
+        const [userData, workoutsCount, muscleStats, exercisesData] = await Promise.all([
           getCurrentUser(),
           getLoggedWorkouts(),
-          getMonthlyExerciseCountPerMuscle()
+          getMonthlyExerciseCountPerMuscle(),
+          getMostPerformedExercises()
         ]);
         setUser(userData);
         setWorkoutsLogged(workoutsCount);
         setMuscleGroupStats(muscleStats);
+        setMostPerformedExercises(exercisesData);
         setError(null);
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -99,6 +105,63 @@ const Home: React.FC = () => {
                     );
                   });
                 })()}
+              </View>
+            )}
+          </View>
+          <View style={{ backgroundColor: "#161b22", padding: 20, borderRadius: 12, marginBottom: 20 }}>
+            <Text style={{ color: "#8b949e", fontSize: 14, marginBottom: 16 }}>
+              Most Performed Exercises
+            </Text>
+            {mostPerformedExercises.length === 0 ? (
+              <Text style={{ color: "#8b949e", fontSize: 14 }}>
+                No data available
+              </Text>
+            ) : (
+              <View>
+                {mostPerformedExercises.map((exercise, index) => (
+                  <View key={index} style={{ flexDirection: "row", alignItems: "center", marginBottom: index < mostPerformedExercises.length - 1 ? 16 : 0 }}>
+                    {exercise.exercisePictureUrl ? (
+                      <Image
+                        source={{ uri: exercise.exercisePictureUrl }}
+                        style={{ width: 50, height: 50, borderRadius: 8, marginRight: 12 }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={{ width: 50, height: 50, borderRadius: 8, marginRight: 12, backgroundColor: "#0d1117", alignItems: "center", justifyContent: "center" }}>
+                        <Text style={{ color: "#8b949e", fontSize: 20 }}>?</Text>
+                      </View>
+                    )}
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>
+                        {exercise.exerciseName}{" "}
+                        <Text style={{ color: "#1f6feb", fontSize: 14, fontWeight: "bold" }}>
+                          {exercise.exerciseCount}x
+                        </Text>
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        router.push({
+                          pathname: "/stats/exerciseStats" as any,
+                          params: {
+                            exerciseId: exercise.exerciseLibraryId,
+                            exerciseName: exercise.exerciseName,
+                            exercisePictureUrl: exercise.exercisePictureUrl || "",
+                          },
+                        });
+                      }}
+                      style={{
+                        marginLeft: 12,
+                        padding: 8,
+                        borderRadius: 8,
+                        backgroundColor: "#0d1117",
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="stats-chart" size={20} color="#1f6feb" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
               </View>
             )}
           </View>

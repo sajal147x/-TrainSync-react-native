@@ -11,6 +11,13 @@ export interface MonthlyExerciseCountPerMuscleDto {
   numberOfSets: number;
 }
 
+export interface ExerciseCountDto {
+  exerciseLibraryId: string;
+  exerciseName: string;
+  exercisePictureUrl: string;
+  exerciseCount: number;
+}
+
 export async function getLoggedWorkouts(): Promise<number> {
   const response = await client.get("/homeStats/loggedWorkouts");
   return response.data;
@@ -27,6 +34,11 @@ export async function getExerciseProgression(exerciseId: string): Promise<Exerci
 
 export async function getMonthlyExerciseCountPerMuscle(): Promise<MonthlyExerciseCountPerMuscleDto[]> {
   const response = await client.get("/homeStats/monthlyExerciseCountPerMuscle");
+  return response.data;
+}
+
+export async function getMostPerformedExercises(): Promise<ExerciseCountDto[]> {
+  const response = await client.get("/homeStats/most-performed-exercises");
   return response.data;
 }
 

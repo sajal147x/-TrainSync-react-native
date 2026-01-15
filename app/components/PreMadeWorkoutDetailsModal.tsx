@@ -7,6 +7,7 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -134,11 +135,19 @@ const PreMadeWorkoutDetailsModal: React.FC<PreMadeWorkoutDetailsModalProps> = ({
                       {workout?.exercises && workout.exercises.length > 0 ? (
                         workout.exercises.map((exercise, index) => (
                           <View key={exercise.id} style={styles.exerciseItem}>
-                            <View style={styles.exerciseNumber}>
-                              <Text style={styles.exerciseNumberText}>
-                                {index + 1}
-                              </Text>
-                            </View>
+                            {exercise.exercisePictureUrl ? (
+                              <Image
+                                source={{ uri: exercise.exercisePictureUrl }}
+                                style={styles.exerciseImage}
+                                resizeMode="cover"
+                              />
+                            ) : (
+                              <View style={styles.exerciseNumber}>
+                                <Text style={styles.exerciseNumberText}>
+                                  {index + 1}
+                                </Text>
+                              </View>
+                            )}
                             <Text style={styles.exerciseName}>
                               {exercise.name}
                             </Text>
@@ -312,9 +321,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   exerciseNumber: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: "rgba(59, 130, 246, 0.2)",
     justifyContent: "center",
     alignItems: "center",
@@ -323,6 +332,12 @@ const styles = StyleSheet.create({
     color: "#3b82f6",
     fontSize: 14,
     fontWeight: "700",
+  },
+  exerciseImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
   },
   exerciseName: {
     color: "#fff",
