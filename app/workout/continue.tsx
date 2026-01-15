@@ -15,7 +15,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { getWorkout, Workout, ExerciseDto } from "../api/workout";
+import { getWorkout, Workout, ExerciseDto } from "../api/workout/workout";
 
 const ContinueWorkout: React.FC = () => {
   const router = useRouter();

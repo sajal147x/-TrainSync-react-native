@@ -17,7 +17,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
-import { addSetToExercise, updateSetInExercise, deleteSet, SetDto, getSets, deleteExerciseInWorkout } from "../api/workout";
+import { addSetToExercise, updateSetInExercise, deleteSet, SetDto, getSets, deleteExerciseInWorkout } from "../api/workout/workout";
 
 interface Set {
   id: string;

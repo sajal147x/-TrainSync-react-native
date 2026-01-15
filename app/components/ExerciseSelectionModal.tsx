@@ -18,7 +18,7 @@ import {
   getMuscleTags,
   MuscleTagDto,
   GetExercisesParams,
-} from "../api/exercises";
+} from "../api/workout/exercises";
 
 interface ExerciseSelectionModalProps {
   visible: boolean;

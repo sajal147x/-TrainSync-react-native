@@ -14,8 +14,8 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { ExerciseDto, EquipmentTagDto } from "../api/exercises";
-import { createNewWorkout, addExerciseToWorkout, getWorkout, changeExerciseInWorkout } from "../api/workout";
+import { ExerciseDto, EquipmentTagDto } from "../api/workout/exercises";
+import { createNewWorkout, addExerciseToWorkout, getWorkout, changeExerciseInWorkout } from "../api/workout/workout";
 
 interface ExerciseDetailsModalProps {
   visible: boolean;

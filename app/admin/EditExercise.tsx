@@ -16,7 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import {
   editExercise,
   ExerciseDto,
-} from "../api/exercises";
+} from "../api/workout/exercises";
 
 export default function EditExercise() {
   const router = useRouter();

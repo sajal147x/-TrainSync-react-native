@@ -4,7 +4,7 @@ import { Link, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { getRecentWorkouts, RecentWorkoutDto } from "../api/workoutTab";
+import { getRecentWorkouts, RecentWorkoutDto } from "../api/workout/workoutTab";
 
 const Workout: React.FC = () => {
   const router = useRouter();

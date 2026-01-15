@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { ExerciseDto } from "../api/exercises";
+import { ExerciseDto } from "../api/workout/exercises";
 import { createPreMadeRoutine, addExerciseToPreMadeWorkout, getPreMadeWorkout, switchExerciseInPreMadeWorkout } from "../api/PreMadeWorkout";
 
 interface PreMadeExerciseDetailsModalProps {

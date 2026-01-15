@@ -21,7 +21,7 @@ import {
   EquipmentTagDto,
   MuscleTagDto,
   GetExercisesParams,
-} from "../api/exercises";
+} from "../api/workout/exercises";
 import PreMadeExerciseDetailsModal from "../components/PreMadeExerciseDetailsModal";
 
 const PAGE_SIZE = 10;

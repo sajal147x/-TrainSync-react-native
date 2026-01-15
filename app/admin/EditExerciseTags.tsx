@@ -16,7 +16,7 @@ import {
   getExercisesForEditTags,
   EditExerciseTagsDto,
   GetExercisesForEditTagsParams,
-} from "../api/exercises";
+} from "../api/workout/exercises";
 
 const PAGE_SIZE = 10;
 

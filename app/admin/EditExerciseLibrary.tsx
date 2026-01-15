@@ -19,7 +19,7 @@ import {
   getMuscleTags,
   MuscleTagDto,
   GetExercisesParams,
-} from "../api/exercises";
+} from "../api/workout/exercises";
 
 const PAGE_SIZE = 10;
 

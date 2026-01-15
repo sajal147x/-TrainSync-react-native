@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIn
 import { Link } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { getFriendsForUser, FriendsResponseDto } from "../api/community";
-import { getGroupsForUser, FriendGroupSummaryDto } from "../api/friendGroup";
+import { getFriendsForUser, FriendsResponseDto } from "../api/community/community";
+import { getGroupsForUser, FriendGroupSummaryDto } from "../api/community/friendGroup";
 
 const Community: React.FC = () => {
   const [friends, setFriends] = useState<FriendsResponseDto[]>([]);

@@ -16,7 +16,7 @@ import {
   createExercise,
   EquipmentTagDto,
   MuscleTagDto,
-} from "../api/exercises";
+} from "../api/workout/exercises";
 
 export default function ConfigureExerciseLibrary() {
   const router = useRouter();

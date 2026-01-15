@@ -4,8 +4,8 @@ import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { getFriendsForUser, FriendsResponseDto } from "../api/community";
-import { createGroup } from "../api/friendGroup";
+import { getFriendsForUser, FriendsResponseDto } from "../api/community/community";
+import { createGroup } from "../api/community/friendGroup";
 
 const CreateGroup: React.FC = () => {
   const router = useRouter();

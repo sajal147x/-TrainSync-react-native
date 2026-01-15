@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { searchUser, sendFriendRequest, getReceivedRequests, acceptFriendRequest, UserSearchResponseDto } from "../api/friendRequest";
+import { searchUser, sendFriendRequest, getReceivedRequests, acceptFriendRequest, UserSearchResponseDto } from "../api/community/friendRequest";
 
 const AddFriend: React.FC = () => {
   const router = useRouter();

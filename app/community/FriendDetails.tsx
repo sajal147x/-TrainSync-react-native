@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, Touchable
 import { useLocalSearchParams, router } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
-import { getFriendWorkoutSummary, FriendWorkoutSummaryDto } from "../api/friendWorkoutSummary";
+import { getFriendWorkoutSummary, FriendWorkoutSummaryDto } from "../api/community/friendWorkoutSummary";
 
 const FriendDetails: React.FC = () => {
   const params = useLocalSearchParams();
