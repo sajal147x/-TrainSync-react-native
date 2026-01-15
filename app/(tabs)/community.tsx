@@ -159,7 +159,7 @@ const Community: React.FC = () => {
                     activeOpacity={0.7}
                     onPress={() => {
                       router.push({
-                        pathname: "/community/Group/GroupHome" as any,
+                        pathname: "/community/Group" as any,
                         params: {
                           groupId: group.groupId,
                           groupName: group.groupName,
