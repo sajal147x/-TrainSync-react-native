@@ -28,8 +28,8 @@ export async function getGroupsForUser(): Promise<FriendGroupSummaryDto[]> {
   return response.data as FriendGroupSummaryDto[];
 }
 
-export async function getGroupLeaderboard(groupId: string): Promise<GroupLeaderboardDto[]> {
-  const response = await client.post("/group-leaderboard", { groupId });
+export async function getGroupLeaderboard(groupId: string, timeFrame: 'week' | 'month' | 'year'): Promise<GroupLeaderboardDto[]> {
+  const response = await client.post("/group-leaderboard", { groupId, timeFrame });
   return response.data as GroupLeaderboardDto[];
 }
 

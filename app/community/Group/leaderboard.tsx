@@ -10,18 +10,18 @@ export default function Leaderboard() {
   const router = useRouter();
   const [leaderboard, setLeaderboard] = useState<GroupLeaderboardDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState<'weekly' | 'monthly' | 'total'>('weekly');
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('week');
 
   useEffect(() => {
     if (groupId) {
       fetchLeaderboard();
     }
-  }, [groupId]);
+  }, [groupId, selectedPeriod]);
 
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const data = await getGroupLeaderboard(groupId);
+      const data = await getGroupLeaderboard(groupId, selectedPeriod);
       setLeaderboard(data);
     } catch (error: any) {
       console.error('Error fetching leaderboard:', error);
@@ -46,27 +46,27 @@ export default function Leaderboard() {
         <Text style={styles.sectionTitle}>Leaderboard</Text>
         <View style={styles.periodButtons}>
           <TouchableOpacity
-            style={[styles.periodButton, styles.periodButtonFirst, selectedPeriod === 'weekly' && styles.periodButtonActive]}
-            onPress={() => setSelectedPeriod('weekly')}
+            style={[styles.periodButton, styles.periodButtonFirst, selectedPeriod === 'week' && styles.periodButtonActive]}
+            onPress={() => setSelectedPeriod('week')}
           >
-            <Text style={[styles.periodButtonText, selectedPeriod === 'weekly' && styles.periodButtonTextActive]}>
+            <Text style={[styles.periodButtonText, selectedPeriod === 'week' && styles.periodButtonTextActive]}>
               Weekly
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.periodButton, styles.periodButtonMiddle, selectedPeriod === 'monthly' && styles.periodButtonActive]}
-            onPress={() => setSelectedPeriod('monthly')}
+            style={[styles.periodButton, styles.periodButtonMiddle, selectedPeriod === 'month' && styles.periodButtonActive]}
+            onPress={() => setSelectedPeriod('month')}
           >
-            <Text style={[styles.periodButtonText, selectedPeriod === 'monthly' && styles.periodButtonTextActive]}>
+            <Text style={[styles.periodButtonText, selectedPeriod === 'month' && styles.periodButtonTextActive]}>
               Monthly
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.periodButton, styles.periodButtonLast, selectedPeriod === 'total' && styles.periodButtonActive]}
-            onPress={() => setSelectedPeriod('total')}
+            style={[styles.periodButton, styles.periodButtonLast, selectedPeriod === 'year' && styles.periodButtonActive]}
+            onPress={() => setSelectedPeriod('year')}
           >
-            <Text style={[styles.periodButtonText, selectedPeriod === 'total' && styles.periodButtonTextActive]}>
-              Total
+            <Text style={[styles.periodButtonText, selectedPeriod === 'year' && styles.periodButtonTextActive]}>
+              Yearly
             </Text>
           </TouchableOpacity>
         </View>
