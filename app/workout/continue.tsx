@@ -15,7 +15,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { getWorkout, Workout, ExerciseDto } from "../api/workout/workout";
+import { getWorkout, Workout, ExerciseDto, deleteWorkout } from "../api/workout/workout";
 
 const ContinueWorkout: React.FC = () => {
   const router = useRouter();
@@ -24,6 +24,8 @@ const ContinueWorkout: React.FC = () => {
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -240,8 +242,83 @@ const ContinueWorkout: React.FC = () => {
                   <Ionicons name="play-outline" size={24} color="#3b82f6" />
                   <Text style={styles.modalOptionText}>Start new Workout with same exercises</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalOptionButton, styles.modalOptionButtonWithMargin]}
+                  onPress={() => {
+                    setShowOptionsModal(false);
+                    setShowDeleteDialog(true);
+                  }}
+                >
+                  <Ionicons name="trash-outline" size={24} color="#ef4444" />
+                  <Text style={[styles.modalOptionText, styles.deleteOptionText]}>Delete Workout</Text>
+                </TouchableOpacity>
               </View>
             </SafeAreaView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <Modal
+        visible={showDeleteDialog}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowDeleteDialog(false)}
+      >
+        <TouchableOpacity
+          style={styles.dialogOverlay}
+          activeOpacity={1}
+          onPress={() => setShowDeleteDialog(false)}
+        >
+          <View style={styles.dialogBackdrop} />
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={styles.dialogContent}
+          >
+            <View style={styles.dialogHeader}>
+              <Ionicons name="warning-outline" size={32} color="#ef4444" />
+              <Text style={styles.dialogTitle}>Delete Workout</Text>
+            </View>
+            
+            <Text style={styles.dialogMessage}>
+              Are you sure you want to delete "{workout?.workoutName || "this workout"}"? This action cannot be undone.
+            </Text>
+
+            <View style={styles.dialogButtons}>
+              <TouchableOpacity
+                style={[styles.dialogButton, styles.dialogButtonCancel]}
+                onPress={() => setShowDeleteDialog(false)}
+                disabled={deleting}
+              >
+                <Text style={styles.dialogButtonTextCancel}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.dialogButton, styles.dialogButtonDelete]}
+                onPress={async () => {
+                  if (!workoutId) return;
+                  setDeleting(true);
+                  try {
+                    await deleteWorkout({ workoutId });
+                    setShowDeleteDialog(false);
+                    router.push("/(tabs)/home");
+                  } catch (error) {
+                    console.error("Error deleting workout:", error);
+                    setDeleting(false);
+                    setShowDeleteDialog(false);
+                  }
+                }}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.dialogButtonTextDelete}>Delete</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
@@ -469,6 +546,81 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   doneButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  deleteOptionText: {
+    color: "#ef4444",
+  },
+  dialogOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+  },
+  dialogBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "transparent",
+  },
+  dialogContent: {
+    backgroundColor: "#1f2937",
+    borderRadius: 16,
+    padding: 24,
+    width: "85%",
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: "#374151",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  dialogHeader: {
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  dialogTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "700",
+    marginTop: 12,
+  },
+  dialogMessage: {
+    color: "#d1d5db",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  dialogButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  dialogButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
+  },
+  dialogButtonCancel: {
+    backgroundColor: "#374151",
+    borderWidth: 1,
+    borderColor: "#4b5563",
+  },
+  dialogButtonDelete: {
+    backgroundColor: "#ef4444",
+  },
+  dialogButtonTextCancel: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  dialogButtonTextDelete: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",

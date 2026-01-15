@@ -59,7 +59,7 @@ const Home: React.FC = () => {
           </View>
           <View style={{ backgroundColor: "#161b22", padding: 20, borderRadius: 12, marginBottom: 20 }}>
             <Text style={{ color: "#8b949e", fontSize: 14, marginBottom: 16 }}>
-              Muscle Group Stats (Last 7 Days)
+              # of Exercises (Last 7 Days)
             </Text>
             {muscleGroupStats.length === 0 ? (
               <Text style={{ color: "#8b949e", fontSize: 14 }}>
