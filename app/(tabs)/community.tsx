@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { getFriendsForUser, FriendsResponseDto } from "../api/community/community";
 import { getGroupsForUser, FriendGroupSummaryDto } from "../api/community/friendGroup";
 
 const Community: React.FC = () => {
+  const router = useRouter();
   const [friends, setFriends] = useState<FriendsResponseDto[]>([]);
   const [groups, setGroups] = useState<FriendGroupSummaryDto[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
@@ -152,7 +153,21 @@ const Community: React.FC = () => {
                 nestedScrollEnabled={true}
               >
                 {groups.map((group) => (
-                  <TouchableOpacity key={group.groupId} style={styles.groupItem} activeOpacity={0.7}>
+                  <TouchableOpacity
+                    key={group.groupId}
+                    style={styles.groupItem}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      router.push({
+                        pathname: "/community/Group/GroupHome" as any,
+                        params: {
+                          groupId: group.groupId,
+                          groupName: group.groupName,
+                          profilePictureUrl: group.profilePictureUrl || "",
+                        },
+                      });
+                    }}
+                  >
                     {group.profilePictureUrl ? (
                       <Image
                         source={{ uri: group.profilePictureUrl }}

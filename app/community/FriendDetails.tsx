@@ -81,7 +81,7 @@ const FriendDetails: React.FC = () => {
               <View style={styles.statCard}>
                 <BlurView intensity={60} tint="dark" style={styles.statCardBlur}>
                   <View style={styles.statCardContent}>
-                    <Text style={styles.statLabel}>Workouts Logged This Week</Text>
+                    <Text style={styles.statLabel}>Total Workouts Logged</Text>
                     <Text style={styles.statValue}>{summary?.workoutCountThisWeek ?? 0}</Text>
                   </View>
                 </BlurView>
