@@ -3,7 +3,7 @@ import { View, Text, ActivityIndicator, ScrollView, Image, TouchableOpacity } fr
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { getCurrentUser, UserDetails } from "../api/user";
-import { getLoggedWorkouts, getMonthlyExerciseCountPerMuscle, MonthlyExerciseCountPerMuscleDto, getMostPerformedExercises, ExerciseCountDto } from "../api/homeStats";
+import { getLoggedWorkouts, getMonthlyExerciseCountPerMuscle, MonthlyExerciseCountPerMuscleDto, getMostPerformedExercises, ExerciseCountDto } from "../api/stats/homeStats";
 
 const Home: React.FC = () => {
   const router = useRouter();
