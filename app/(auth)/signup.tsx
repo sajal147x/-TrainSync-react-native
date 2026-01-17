@@ -73,6 +73,12 @@ export default function SignUp() {
       behavior={Platform.select({ ios: "padding", android: undefined })}
     >
       <View style={styles.inner}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.push("/")}
+        >
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>
           Join Train Sync — track progress & train smarter.
@@ -177,6 +183,13 @@ export default function SignUp() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0d1117" },
   inner: { flex: 1, justifyContent: "center", padding: 24 },
+  backButton: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 30,
+    left: 24,
+    zIndex: 10,
+    padding: 8,
+  },
   title: { fontSize: 34, fontWeight: "800", color: "#fff", marginBottom: 6 },
   subtitle: { fontSize: 14, color: "#9AA4B2", marginBottom: 22 },
   form: { width: "100%" },

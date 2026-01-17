@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import storage from "./api/storage";
 
@@ -63,15 +62,7 @@ export default function Index() {
               <Text style={styles.signUpText}>Sign Up</Text>
             </TouchableOpacity>
           </Link>
-
-          {/* Continue with Google */}
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={() => console.log("TODO: Google OAuth via Java microservice")}
-          >
-            <Ionicons name="logo-google" size={20} color="#fff" />
-            <Text style={styles.googleText}>Continue with Google</Text>
-          </TouchableOpacity>
+          <Text style={styles.noEmailText}>No Email Required</Text>
         </View>
       </View>
     </LinearGradient>
@@ -132,19 +123,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#db4437",
-    width: "90%",
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-  googleText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 8,
+  noEmailText: {
+    color: "#9AA4B2",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 8,
   },
 });
