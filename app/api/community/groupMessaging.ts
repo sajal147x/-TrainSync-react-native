@@ -16,3 +16,14 @@ export async function getGroupMessages(groupId: string): Promise<GroupMessageDto
   return response.data;
 }
 
+export interface GroupMessageRequest {
+  groupId: string;
+  message: string;
+}
+
+export async function sendGroupMessage(request: GroupMessageRequest): Promise<void> {
+  await client.post(
+    `/send-message`,
+    { groupId: request.groupId, message: request.message }
+  );
+}

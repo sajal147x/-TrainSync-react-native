@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getGroupMessages, GroupMessageDto } from '../../api/community/groupMessaging';
+import { Image } from 'expo-image';
+import { getGroupMessages, GroupMessageDto, sendGroupMessage } from '../../api/community/groupMessaging';
 
 function formatMessageTime(dateString: string): string {
   const date = new Date(dateString);
@@ -28,9 +29,10 @@ function formatMessageTime(dateString: string): string {
 }
 
 export default function Messaging() {
-  const { groupName, groupId } = useLocalSearchParams<{ 
+  const { groupName, groupId, profilePictureUrl } = useLocalSearchParams<{ 
     groupName: string;
     groupId: string;
+    profilePictureUrl?: string;
   }>();
   const router = useRouter();
   const [messages, setMessages] = useState<GroupMessageDto[]>([]);
@@ -55,6 +57,27 @@ export default function Messaging() {
     }
   };
 
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !groupId) {
+      return;
+    }
+
+    try {
+      await sendGroupMessage({
+        groupId,
+        message: messageText.trim(),
+      });
+      
+      // Clear the input
+      setMessageText('');
+      
+      // Refresh messages
+      await fetchMessages();
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -64,7 +87,23 @@ export default function Messaging() {
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{groupName || 'Group'}</Text>
+        <View style={styles.headerTitleContainer}>
+          {profilePictureUrl ? (
+            <Image
+              source={{ uri: profilePictureUrl }}
+              style={styles.headerProfilePicture}
+              contentFit="cover"
+              cachePolicy="disk"
+            />
+          ) : (
+            <View style={styles.headerProfilePicturePlaceholder}>
+              <Text style={styles.headerProfilePictureText}>
+                {(groupName || 'G').charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <Text style={styles.headerTitle}>{groupName || 'Group'}</Text>
+        </View>
         <View style={styles.placeholder} />
       </View>
       
@@ -99,13 +138,13 @@ export default function Messaging() {
                   ]}
                 >
                   <Text style={styles.messageText}>{msg.message}</Text>
-                  <View style={styles.messageFooter}>
-                    <Text style={styles.messageName}>{msg.userDto.name}</Text>
-                    <Text style={styles.messageTime}>
-                      {' • '}
-                      {formatMessageTime(msg.sentAt)}
-                    </Text>
-                  </View>
+                </View>
+                <View style={styles.messageFooter}>
+                  <Text style={styles.messageName}>{msg.userDto.name}</Text>
+                  <Text style={styles.messageTime}>
+                    {' • '}
+                    {formatMessageTime(msg.sentAt)}
+                  </Text>
                 </View>
               </View>
             );
@@ -124,9 +163,7 @@ export default function Messaging() {
         />
         <TouchableOpacity
           style={styles.sendButton}
-          onPress={() => {
-            // TODO: Implement send message functionality
-          }}
+          onPress={handleSendMessage}
         >
           <Ionicons name="send" size={20} color="#fff" />
         </TouchableOpacity>
@@ -158,12 +195,40 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
+  headerTitleContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  headerProfilePicture: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    borderWidth: 2,
+    borderColor: 'rgba(59, 130, 246, 0.4)',
+  },
+  headerProfilePicturePlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(59, 130, 246, 0.3)',
+    borderWidth: 2,
+    borderColor: 'rgba(59, 130, 246, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerProfilePictureText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   headerTitle: {
     color: '#fff',
     fontSize: 20,
     fontWeight: '700',
-    flex: 1,
-    textAlign: 'center',
   },
   placeholder: {
     width: 40,
@@ -192,7 +257,7 @@ const styles = StyleSheet.create({
   },
   messageWrapper: {
     marginBottom: 12,
-    maxWidth: '75%',
+    maxWidth: '50%',
   },
   messageWrapperLeft: {
     alignSelf: 'flex-start',
@@ -201,9 +266,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   messageBubble: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
   messageBubbleLeft: {
     backgroundColor: 'rgba(59, 130, 246, 0.2)',
@@ -215,14 +280,14 @@ const styles = StyleSheet.create({
   },
   messageText: {
     color: '#fff',
-    fontSize: 15,
-    lineHeight: 20,
-    marginBottom: 4,
+    fontSize: 14,
+    lineHeight: 18,
   },
   messageFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 4,
+    paddingHorizontal: 4,
   },
   messageName: {
     color: 'rgba(255, 255, 255, 0.7)',
