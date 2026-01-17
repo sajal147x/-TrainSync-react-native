@@ -30,6 +30,7 @@ export interface ExerciseDto {
   preFilledWorkoutName?: string;
   exercisePictureUrl?: string;
   exerciseOrder?: number;
+  exerciseLibraryId?: string;
 }
 
 export interface Workout {

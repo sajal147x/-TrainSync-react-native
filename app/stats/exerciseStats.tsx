@@ -8,7 +8,7 @@ import { getExerciseStats, ExerciseStatsDto } from "../api/stats/exerciseStats";
 const ExerciseStats: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const exerciseId = params.exerciseId as string;
+  const exerciseLibraryId = params.exerciseLibraryId as string;
   const exerciseName = (params.exerciseName as string) || "";
   const exercisePictureUrl = (params.exercisePictureUrl as string) || "";
 
@@ -18,15 +18,15 @@ const ExerciseStats: React.FC = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      if (!exerciseId) {
-        setError("Exercise ID is missing");
+      if (!exerciseLibraryId) {
+        setError("Exercise Library ID is missing");
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
-        const data = await getExerciseStats(exerciseId);
+        const data = await getExerciseStats(exerciseLibraryId);
         setStats(data);
         setError(null);
       } catch (err) {
@@ -38,7 +38,7 @@ const ExerciseStats: React.FC = () => {
     };
 
     fetchStats();
-  }, [exerciseId]);
+  }, [exerciseLibraryId]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0d1117" }}>

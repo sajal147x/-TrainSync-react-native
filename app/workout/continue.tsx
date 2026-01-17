@@ -128,6 +128,7 @@ const ContinueWorkout: React.FC = () => {
                           preFilledDate: exercise.preFilledDate || "",
                           preFilledWorkoutName: exercise.preFilledWorkoutName || "",
                           workoutId: workoutId,
+                          exerciseLibraryId: exercise.exerciseLibraryId || "",
                         },
                       });
                     }}

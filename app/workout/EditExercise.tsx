@@ -38,6 +38,7 @@ const EditExercise: React.FC = () => {
   const preFilledDate = params.preFilledDate as string | undefined;
   const preFilledWorkoutName = params.preFilledWorkoutName as string | undefined;
   const workoutId = params.workoutId as string | undefined;
+  const exerciseLibraryId = params.exerciseLibraryId as string | undefined;
   
   const [sets, setSets] = useState<Set[]>([]);
   const [savingSetId, setSavingSetId] = useState<string | null>(null);
@@ -406,6 +407,27 @@ const EditExercise: React.FC = () => {
                 </Text>
               </View>
             )}
+            <View style={styles.statsContainer}>
+              <Text style={styles.statsText}>Exercise Stats/Progression</Text>
+              <Ionicons name="chevron-forward" size={20} color="#fff" />
+              <TouchableOpacity
+                style={styles.statsButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push({
+                    pathname: "/stats/exerciseStats",
+                    params: {
+                      exerciseLibraryId: exerciseLibraryId || "",
+                      exerciseName: exerciseName,
+                      exercisePictureUrl: exercisePictureUrl || "",
+                    },
+                  });
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="stats-chart" size={20} color="#1f6feb" />
+              </TouchableOpacity>
+            </View>
             {sets.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="barbell-outline" size={48} color="#4b5563" />
@@ -713,8 +735,8 @@ const styles = StyleSheet.create({
   setItem: {
     backgroundColor: "rgba(31, 41, 55, 0.6)",
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    padding: 12,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.2)",
   },
@@ -722,11 +744,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   setNumber: {
     color: "#3b82f6",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
   },
   actionButtons: {
@@ -745,23 +767,23 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
   },
   inputContainer: {
     flex: 1,
   },
   inputLabel: {
     color: "#9ca3af",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   input: {
     backgroundColor: "rgba(17, 24, 39, 0.6)",
     borderRadius: 8,
-    padding: 12,
+    padding: 10,
     color: "#fff",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.3)",
@@ -856,6 +878,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     flex: 1,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 16,
+  },
+  statsText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  statsButton: {
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.4)",
   },
   imageModalOverlay: {
     ...StyleSheet.absoluteFillObject,
