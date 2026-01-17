@@ -144,7 +144,7 @@ const Home: React.FC = () => {
                         router.push({
                           pathname: "/stats/exerciseStats" as any,
                           params: {
-                            exerciseId: exercise.exerciseLibraryId,
+                            exerciseLibraryId: exercise.exerciseLibraryId,
                             exerciseName: exercise.exerciseName,
                             exercisePictureUrl: exercise.exercisePictureUrl || "",
                           },
