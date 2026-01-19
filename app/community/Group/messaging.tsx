@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { Client, IMessage } from '@stomp/stompjs';
 import { getGroupMessages, GroupMessageDto, sendGroupMessage } from '../../api/community/groupMessaging';
 
 function formatMessageTime(dateString: string): string {
@@ -38,11 +39,18 @@ export default function Messaging() {
   const [messages, setMessages] = useState<GroupMessageDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
+  const stompClientRef = useRef<Client | null>(null);
 
   useEffect(() => {
     if (groupId) {
       fetchMessages();
+      connectWebSocket();
     }
+
+    // Cleanup on unmount or when groupId changes
+    return () => {
+      disconnectWebSocket();
+    };
   }, [groupId]);
 
   const fetchMessages = async () => {
@@ -54,6 +62,121 @@ export default function Messaging() {
       console.error('Error fetching messages:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const connectWebSocket = async () => {
+    // Disconnect any existing connection first
+    disconnectWebSocket();
+
+    try {
+      // Get API_BASE URL from environment
+      const API_BASE = process.env.EXPO_PUBLIC_API_URL;
+      if (!API_BASE) {
+        console.error('EXPO_PUBLIC_API_URL is not set');
+        return;
+      }
+
+      if (!groupId) {
+        console.error('groupId is not available for WebSocket connection');
+        return;
+      }
+
+      // Convert HTTP URL to WebSocket URL
+      // Note: Spring WebSocket with .withSockJS() might not accept native WebSocket directly
+      // You may need to update backend to also support native WebSocket:
+      // registry.addEndpoint("/api/ws").setAllowedOriginPatterns("*").withSockJS();
+      // registry.addEndpoint("/api/ws").setAllowedOriginPatterns("*"); // for native WebSocket
+      let wsUrl = API_BASE.replace(/^http/, 'ws').replace(/\/$/, '') + '/ws';
+
+      console.log('Attempting WebSocket connection to:', wsUrl);
+
+      // Create STOMP client with native WebSocket
+      // React Native specific options needed for proper STOMP + WebSocket behavior
+      const client = new Client({
+        brokerURL: wsUrl,
+        // No JWT authentication needed for WebSocket
+        connectHeaders: {},
+        // Use native WebSocket for React Native
+        webSocketFactory: () => {
+          const ws = new WebSocket(wsUrl);
+          ws.onerror = (error) => {
+            console.error('Raw WebSocket error:', error);
+          };
+          ws.onopen = () => {
+            console.log('Raw WebSocket opened');
+          };
+          ws.onclose = (event) => {
+            console.log('Raw WebSocket closed:', event.code, event.reason);
+          };
+          return ws;
+        },
+        // React Native specific options to ensure proper frame handling
+        forceBinaryWSFrames: true,
+        appendMissingNULLonIncoming: true,
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+        debug: (str) => {
+          // Uncomment for debugging: console.log('STOMP:', str);
+        },
+      });
+
+      // Handle connection
+      client.onConnect = () => {
+        
+        // Subscribe to group messages topic
+        const topic = `/topic/groups/${groupId}`;
+        const subscription = client.subscribe(topic, (message: IMessage) => {
+          try {
+            // When a message is received, refresh the messages
+            console.log('New message received via WebSocket for group:', groupId);
+            fetchMessages();
+          } catch (error) {
+            console.error('Error handling WebSocket message:', error);
+          }
+        });
+
+        // Store subscription reference for cleanup if needed
+        if (!stompClientRef.current) {
+          stompClientRef.current = client;
+        }
+      };
+
+      // Handle errors
+      client.onStompError = (frame) => {
+        console.error('STOMP error:', frame.headers['message'], frame.body);
+      };
+
+      client.onWebSocketError = (event: any) => {
+        
+        // You may need to add this to your backend WebSocketConfig:
+        // registry.addEndpoint("/api/ws").setAllowedOriginPatterns("*"); // for native WebSocket
+      };
+
+      client.onDisconnect = () => {
+      };
+
+      // Activate the client
+      client.activate();
+      stompClientRef.current = client;
+    } catch (error) {
+      console.error('Error connecting WebSocket:', error);
+    }
+  };
+
+  const disconnectWebSocket = () => {
+    if (stompClientRef.current) {
+      try {
+        if (stompClientRef.current.connected) {
+          stompClientRef.current.deactivate();
+        }
+        stompClientRef.current = null;
+        console.log('WebSocket disconnected on cleanup');
+      } catch (error) {
+        console.error('Error disconnecting WebSocket:', error);
+        stompClientRef.current = null;
+      }
     }
   };
 
@@ -79,96 +202,103 @@ export default function Messaging() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          {profilePictureUrl ? (
-            <Image
-              source={{ uri: profilePictureUrl }}
-              style={styles.headerProfilePicture}
-              contentFit="cover"
-              cachePolicy="disk"
-            />
-          ) : (
-            <View style={styles.headerProfilePicturePlaceholder}>
-              <Text style={styles.headerProfilePictureText}>
-                {(groupName || 'G').charAt(0).toUpperCase()}
-              </Text>
-            </View>
-          )}
-          <Text style={styles.headerTitle}>{groupName || 'Group'}</Text>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.headerTitleContainer}>
+            {profilePictureUrl ? (
+              <Image
+                source={{ uri: profilePictureUrl }}
+                style={styles.headerProfilePicture}
+                contentFit="cover"
+                cachePolicy="disk"
+              />
+            ) : (
+              <View style={styles.headerProfilePicturePlaceholder}>
+                <Text style={styles.headerProfilePictureText}>
+                  {(groupName || 'G').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <Text style={styles.headerTitle}>{groupName || 'Group'}</Text>
+          </View>
+          <View style={styles.placeholder} />
         </View>
-        <View style={styles.placeholder} />
-      </View>
-      
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#fff" size="large" />
-        </View>
-      ) : messages.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No messages yet</Text>
-        </View>
-      ) : (
-        <ScrollView 
-          style={styles.messagesContainer}
-          contentContainerStyle={styles.messagesContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {messages.map((msg, index) => {
-            const isSentByMe = msg.isSentByLoggedInUser === 'true' || msg.isSentByLoggedInUser === 'True';
-            return (
-              <View
-                key={index}
-                style={[
-                  styles.messageWrapper,
-                  isSentByMe ? styles.messageWrapperRight : styles.messageWrapperLeft,
-                ]}
-              >
+        
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color="#fff" size="large" />
+          </View>
+        ) : messages.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No messages yet</Text>
+          </View>
+        ) : (
+          <ScrollView 
+            style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {messages.map((msg, index) => {
+              const isSentByMe = msg.isSentByLoggedInUser === 'true' || msg.isSentByLoggedInUser === 'True';
+              return (
                 <View
+                  key={index}
                   style={[
-                    styles.messageBubble,
-                    isSentByMe ? styles.messageBubbleRight : styles.messageBubbleLeft,
+                    styles.messageWrapper,
+                    isSentByMe ? styles.messageWrapperRight : styles.messageWrapperLeft,
                   ]}
                 >
-                  <Text style={styles.messageText}>{msg.message}</Text>
+                  <View
+                    style={[
+                      styles.messageBubble,
+                      isSentByMe ? styles.messageBubbleRight : styles.messageBubbleLeft,
+                    ]}
+                  >
+                    <Text style={styles.messageText}>{msg.message}</Text>
+                  </View>
+                  <View style={styles.messageFooter}>
+                    <Text style={styles.messageName}>{msg.userDto.name}</Text>
+                    <Text style={styles.messageTime}>
+                      {' • '}
+                      {formatMessageTime(msg.sentAt)}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.messageFooter}>
-                  <Text style={styles.messageName}>{msg.userDto.name}</Text>
-                  <Text style={styles.messageTime}>
-                    {' • '}
-                    {formatMessageTime(msg.sentAt)}
-                  </Text>
-                </View>
-              </View>
-            );
-          })}
-        </ScrollView>
-      )}
+              );
+            })}
+          </ScrollView>
+        )}
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Type a message..."
-          placeholderTextColor="#6b7280"
-          value={messageText}
-          onChangeText={setMessageText}
-          multiline
-        />
-        <TouchableOpacity
-          style={styles.sendButton}
-          onPress={handleSendMessage}
-        >
-          <Ionicons name="send" size={20} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Type a message..."
+            placeholderTextColor="#6b7280"
+            value={messageText}
+            onChangeText={setMessageText}
+            multiline
+          />
+          <TouchableOpacity
+            style={styles.sendButton}
+            onPress={handleSendMessage}
+          >
+            <Ionicons name="send" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -303,7 +433,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    paddingBottom: 60,
+    paddingBottom: Platform.OS === 'ios' ? 12 : 12,
     borderTopWidth: 1,
     borderTopColor: 'rgba(59, 130, 246, 0.2)',
     backgroundColor: '#0d1117',
