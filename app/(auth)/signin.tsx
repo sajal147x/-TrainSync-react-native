@@ -7,11 +7,15 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 import { signIn } from "../api/auth"; // your API call
 import storage from "../api/storage";
+import { registerPushToken } from "../api/notifications/registerPushNotification";
 
 
 export default function SignIn() {
@@ -21,6 +25,99 @@ export default function SignIn() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const router = useRouter();
+
+  const registerForPushNotificationsAsync = async () => {
+    // Check if device is physical (push notifications don't work on simulators/emulators)
+    if (!Device.isDevice) {
+      console.log("Push notifications only work on physical devices");
+      return null;
+    }
+
+    try {
+      // Check existing permissions - this queries the OS directly, not a database
+      // iOS/Android store permission status in system settings
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      // If permission not granted, ask for permission
+      // Note: OS will only show dialog once. After that, user must go to Settings to change
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync({
+          ios: {
+            allowAlert: true,
+            allowBadge: true,
+            allowSound: true,
+          },
+        });
+        finalStatus = status;
+      }
+
+      // If permission denied, inform user and return
+      if (finalStatus !== "granted") {
+        console.log("Permission for push notifications was denied");
+        return null;
+      }
+
+      // Check if we already have a push token stored locally
+      const existingToken = await storage.getItemAsync("pushToken");
+      let pushTokenToUse: string | null = existingToken;
+
+      // If no existing token, get a new one
+      if (!existingToken) {
+        const token = await Notifications.getExpoPushTokenAsync({
+          projectId: "99937d9e-ca75-4b35-b056-5b986d9a4384", // From app.json extra.eas.projectId
+        });
+        pushTokenToUse = token.data;
+        console.log("New push token registered:", pushTokenToUse);
+        
+        // Store the push token locally
+        await storage.setItemAsync("pushToken", pushTokenToUse);
+      } else {
+        console.log("Using existing push token:", pushTokenToUse);
+      }
+
+      // Register push token with backend (only if we have a token)
+      if (pushTokenToUse) {
+        // Extract just the token value from ExponentPushToken[...] format
+        // Example: ExponentPushToken[fU2onQBNWY83WoG_Gz2wz0] -> fU2onQBNWY83WoG_Gz2wz0
+        let tokenValue = pushTokenToUse;
+        const match = pushTokenToUse.match(/ExponentPushToken\[(.+)\]/);
+        if (match && match[1]) {
+          tokenValue = match[1];
+        }
+        
+        // Determine platform (ios or android)
+        const platform = Platform.OS === "ios" ? "ios" : "android";
+        
+        try {
+          const response = await registerPushToken(tokenValue, platform);
+          if (response.status === 200 || response.status === 201) {
+            console.log("Push token successfully registered with backend");
+          } else {
+            console.warn("Failed to register push token with backend:", response.status, response.data);
+          }
+        } catch (error: any) {
+          console.error("Error registering push token with backend:", error);
+          // Don't throw - token registration failure shouldn't block login
+        }
+      }
+
+      // Configure notification handler behavior (only needs to be set once)
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowBanner: true,
+          shouldShowList: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+        }),
+      });
+
+      return pushTokenToUse;
+    } catch (error) {
+      console.error("Error registering for push notifications:", error);
+      return null;
+    }
+  };
 
   const handleSignIn = async () => {
     setErrorMessage(""); // Clear any previous error
@@ -41,6 +138,9 @@ export default function SignIn() {
       // Response format: { userId, username, accessToken, refreshToken }
       await storage.setItemAsync("jwt", response.data.accessToken);
       await storage.setItemAsync("refreshToken", response.data.refreshToken);
+
+      // Request push notification permissions after successful login
+      await registerForPushNotificationsAsync();
 
       router.replace("/(tabs)/home");
     } catch (error: any) {
