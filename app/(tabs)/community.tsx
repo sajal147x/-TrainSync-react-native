@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator, RefreshControl } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,6 +12,7 @@ const Community: React.FC = () => {
   const [groups, setGroups] = useState<FriendGroupSummaryDto[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
   const [groupsLoading, setGroupsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchFriends();
@@ -42,9 +43,32 @@ const Community: React.FC = () => {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([fetchFriends(), fetchGroups()]);
+    } catch (error) {
+      console.error("Error refreshing:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#fff"
+            colors={["#3b82f6"]}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Community</Text>
         
         <View style={styles.buttonsRow}>
@@ -187,7 +211,7 @@ const Community: React.FC = () => {
             )}
           </View>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -199,8 +223,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  contentContainer: {
     paddingHorizontal: 24,
     paddingTop: 60,
+    paddingBottom: 24,
   },
   title: {
     color: "#fff",
