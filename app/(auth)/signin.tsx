@@ -81,10 +81,6 @@ export default function SignIn() {
         // Extract just the token value from ExponentPushToken[...] format
         // Example: ExponentPushToken[fU2onQBNWY83WoG_Gz2wz0] -> fU2onQBNWY83WoG_Gz2wz0
         let tokenValue = pushTokenToUse;
-        const match = pushTokenToUse.match(/ExponentPushToken\[(.+)\]/);
-        if (match && match[1]) {
-          tokenValue = match[1];
-        }
         
         // Determine platform (ios or android)
         const platform = Platform.OS === "ios" ? "ios" : "android";

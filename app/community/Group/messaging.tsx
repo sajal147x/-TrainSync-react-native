@@ -49,7 +49,7 @@ export default function Messaging() {
 
     // Cleanup on unmount or when groupId changes
     return () => {
-      disconnectWebSocket();
+      disconnectWebSocket(); 
     };
   }, [groupId]);
 
