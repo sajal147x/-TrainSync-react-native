@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 import Leaderboard from './leaderboard';
 import Messaging from './messaging';
 import Settings from './settings';
@@ -8,8 +9,12 @@ import Settings from './settings';
 const Tab = createBottomTabNavigator();
 
 export default function GroupHomeLayout() {
+  const params = useLocalSearchParams();
+  const initialTab = params.initialTab as string | undefined;
+
   return (
     <Tab.Navigator
+      initialRouteName={initialTab === 'Messaging' ? 'Messaging' : 'Leaderboard'}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ color, size }) => {

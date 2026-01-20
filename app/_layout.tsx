@@ -19,13 +19,14 @@ export default function RootLayout() {
           const profilePictureUrl = typeof data.profilePictureUrl === "string" ? data.profilePictureUrl : String(data.profilePictureUrl || "");
           
           if (groupId) {
-            // Route to the Group Messaging tab with the group data
+            // Route to the Group screen with Messaging tab as initial tab
             router.push({
-              pathname: "/community/Group/messaging" as any,
+              pathname: "/community/Group" as any,
               params: {
                 groupId: groupId.toString(),
                 groupName: groupName,
                 profilePictureUrl: profilePictureUrl,
+                initialTab: "Messaging",
               },
             });
           }
@@ -47,11 +48,12 @@ export default function RootLayout() {
             // Small delay to ensure navigation is ready
             setTimeout(() => {
               router.push({
-                pathname: "/community/Group/messaging" as any,
+                pathname: "/community/Group" as any,
                 params: {
                   groupId: groupId.toString(),
                   groupName: groupName,
                   profilePictureUrl: profilePictureUrl,
+                  initialTab: "Messaging",
                 },
               });
             }, 500);
