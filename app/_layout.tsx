@@ -31,6 +31,25 @@ export default function RootLayout() {
             });
           }
         }
+        
+        // Check if this is a FRIEND notification
+        if (data?.type === "FRIEND") {
+          const friendId = data.friendId;
+          const name = typeof data.name === "string" ? data.name : String(data.name || "");
+          const profilePictureUrl = typeof data.profilePictureUrl === "string" ? data.profilePictureUrl : String(data.profilePictureUrl || "");
+          
+          if (friendId) {
+            // Route to the FriendDetails screen
+            router.push({
+              pathname: "/community/FriendDetails" as any,
+              params: {
+                userId: friendId.toString(),
+                name: name,
+                profilePictureUrl: profilePictureUrl,
+              },
+            });
+          }
+        }
       }
     );
 
@@ -54,6 +73,26 @@ export default function RootLayout() {
                   groupName: groupName,
                   profilePictureUrl: profilePictureUrl,
                   initialTab: "Messaging",
+                },
+              });
+            }, 500);
+          }
+        }
+        
+        if (data?.type === "FRIEND") {
+          const friendId = data.friendId;
+          const name = typeof data.name === "string" ? data.name : String(data.name || "");
+          const profilePictureUrl = typeof data.profilePictureUrl === "string" ? data.profilePictureUrl : String(data.profilePictureUrl || "");
+          
+          if (friendId) {
+            // Small delay to ensure navigation is ready
+            setTimeout(() => {
+              router.push({
+                pathname: "/community/FriendDetails" as any,
+                params: {
+                  userId: friendId.toString(),
+                  name: name,
+                  profilePictureUrl: profilePictureUrl,
                 },
               });
             }, 500);
