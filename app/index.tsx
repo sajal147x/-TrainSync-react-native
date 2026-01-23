@@ -62,7 +62,13 @@ export default function Index() {
               <Text style={styles.signUpText}>Sign Up</Text>
             </TouchableOpacity>
           </Link>
-          <Text style={styles.noEmailText}>No Email Required</Text>
+
+          {/* Forgot Password */}
+          <Link href="/(auth)/resetPassword" asChild>
+            <TouchableOpacity style={styles.forgotPasswordButton}>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </Link>
         </View>
       </View>
     </LinearGradient>
@@ -123,10 +129,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  noEmailText: {
-    color: "#9AA4B2",
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 8,
+  forgotPasswordButton: {
+    alignSelf: "center",
+    marginTop: 12,
+    paddingVertical: 4,
+  },
+  forgotPasswordText: {
+    color: "#60a5fa",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

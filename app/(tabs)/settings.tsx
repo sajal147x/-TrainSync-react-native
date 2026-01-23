@@ -217,6 +217,11 @@ export default function Settings() {
               <Text style={styles.value}>{user.username}</Text>
             </View>
 
+            <View style={styles.field}>
+              <Text style={styles.label}>Email</Text>
+              <Text style={styles.value}>{user.email || "N/A"}</Text>
+            </View>
+
             <View style={styles.fieldLast}>
               <Text style={styles.label}>Age</Text>
               {isEditing ? (

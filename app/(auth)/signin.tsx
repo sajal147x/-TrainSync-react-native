@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
-import { signIn } from "../api/auth"; // your API call
+import { signIn } from "../api/auth/auth"; // your API call
 import storage from "../api/storage";
 import { registerPushToken } from "../api/notifications/registerPushNotification";
 
@@ -214,6 +214,13 @@ export default function SignIn() {
             <Text style={styles.primaryText}>Sign In</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.forgotPasswordButton}
+            onPress={() => router.push("/(auth)/resetPassword")}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>Don't have an account?</Text>
             <Link href="/signup" asChild>
@@ -222,7 +229,6 @@ export default function SignIn() {
               </TouchableOpacity>
             </Link>
           </View>
-          <Text style={styles.noEmailText}>No Email Required</Text>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -264,15 +270,19 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   primaryText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  forgotPasswordButton: {
+    alignSelf: "flex-end",
+    marginTop: 12,
+    paddingVertical: 4,
+  },
+  forgotPasswordText: {
+    color: "#60a5fa",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   footerRow: { flexDirection: "row", justifyContent: "center", marginTop: 20 },
   footerText: { color: "#9AA4B2" },
   signInLink: { color: "#60a5fa", fontWeight: "600" },
-  noEmailText: {
-    color: "#9AA4B2",
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 8,
-  },
   errorText: {
     color: "#ef4444",
     fontSize: 14,

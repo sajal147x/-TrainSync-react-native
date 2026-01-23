@@ -10,13 +10,14 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
-import { signUp } from "../api/auth";
+import { signUp } from "../api/auth/auth";
 import storage from "../api/storage";
 
 export default function SignUp() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");  // new field
+  const [email, setEmail] = useState("");
   const [age, setAge] = useState("");    // new field
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -38,7 +39,7 @@ export default function SignUp() {
         setErrorMessage("Please enter a valid age");
         return;
       }
-      const response = await signUp(username, password, name, ageNumber);
+      const response = await signUp(username, password, name, email, ageNumber);
       
       // Check response immediately - if 401 with "User Already Exists", show error and return
       if (response.status === 401 && response.data === "User Already Exists") {
@@ -96,6 +97,22 @@ export default function SignUp() {
             placeholder="Your name"
             placeholderTextColor="#9AA4B2"
             style={styles.input}
+          />
+
+          {/* Email */}
+          <Text style={[styles.label, { marginTop: 16 }]}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setErrorMessage(""); // Clear error when user types
+            }}
+            placeholder="Your email"
+            placeholderTextColor="#9AA4B2"
+            style={styles.input}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            textContentType="emailAddress"
           />
 
           {/* Age */}
@@ -167,6 +184,13 @@ export default function SignUp() {
             <Text style={styles.primaryText}>Sign Up</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.forgotPasswordButton}
+            onPress={() => router.push("/(auth)/resetPassword")}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>Already have an account?</Text>
             <Link href="/signin" asChild>
@@ -214,6 +238,16 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   primaryText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  forgotPasswordButton: {
+    alignSelf: "flex-end",
+    marginTop: 12,
+    paddingVertical: 4,
+  },
+  forgotPasswordText: {
+    color: "#60a5fa",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   footerRow: { flexDirection: "row", justifyContent: "center", marginTop: 20 },
   footerText: { color: "#9AA4B2" },
   signInLink: { color: "#60a5fa", fontWeight: "600" },
