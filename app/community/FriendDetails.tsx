@@ -91,18 +91,17 @@ const FriendDetails: React.FC = () => {
               <View style={styles.recentWorkoutsContainer}>
                 <Text style={styles.subsectionTitle}>Recent Workouts</Text>
                 {summary?.recentWorkouts && summary.recentWorkouts.length > 0 ? (
-                  summary.recentWorkouts.map((workout) => (
-                    <View key={workout.workoutId} style={styles.workoutCard}>
-                      <BlurView intensity={60} tint="dark" style={styles.workoutCardBlur}>
-                        <View style={styles.workoutCardContent}>
-                          <View style={styles.workoutInfo}>
-                            <Text style={styles.workoutName}>{workout.workoutName}</Text>
-                            <Text style={styles.workoutDate}>{formatDate(workout.workoutDate)}</Text>
-                          </View>
+                  <ScrollView style={styles.workoutsList} showsVerticalScrollIndicator={false}>
+                    {summary.recentWorkouts.map((workout) => (
+                      <View key={workout.workoutId} style={styles.workoutItem}>
+                        <View style={styles.workoutInfo}>
+                          <Text style={styles.workoutName}>{workout.workoutName}</Text>
+                          <Text style={styles.workoutDate}>{formatDate(workout.workoutDate)}</Text>
                         </View>
-                      </BlurView>
-                    </View>
-                  ))
+                        <View style={styles.workoutDivider} />
+                      </View>
+                    ))}
+                  </ScrollView>
                 ) : (
                   <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>No recent workouts</Text>
@@ -225,23 +224,20 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 16,
   },
-  workoutCard: {
-    marginBottom: 12,
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.3)",
+  workoutsList: {
+    flex: 1,
   },
-  workoutCardBlur: {
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: "rgba(22, 27, 34, 0.6)",
-  },
-  workoutCardContent: {
-    padding: 16,
+  workoutItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 0,
   },
   workoutInfo: {
-    gap: 4,
+    alignItems: "flex-start",
+  },
+  workoutDivider: {
+    height: 1,
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
+    marginTop: 8,
   },
   workoutName: {
     color: "#fff",
