@@ -98,12 +98,23 @@ const ContinueWorkout: React.FC = () => {
                 [...workout.exercises]
                   .sort((a, b) => (a.exerciseOrder || 0) - (b.exerciseOrder || 0))
                   .map((exercise, index, array) => (
-                  <View 
-                    key={index} 
+                  <TouchableOpacity
+                    key={index}
                     style={[
                       styles.exerciseItem,
                       index < array.length - 1 && styles.exerciseItemWithBorder
                     ]}
+                    onPress={() => {
+                      router.push({
+                        pathname: "/stats/exerciseStats",
+                        params: {
+                          exerciseLibraryId: exercise.exerciseLibraryId || "",
+                          exerciseName: exercise.name || "",
+                          exercisePictureUrl: exercise.exercisePictureUrl || "",
+                        },
+                      });
+                    }}
+                    activeOpacity={0.7}
                   >
                   {exercise.exercisePictureUrl ? (
                     <Image
@@ -136,7 +147,7 @@ const ContinueWorkout: React.FC = () => {
                   >
                     <Ionicons name="create-outline" size={20} color="#3b82f6" />
                   </TouchableOpacity>
-                  </View>
+                  </TouchableOpacity>
                 ))
               ) : (
                 <View style={styles.emptyState}>

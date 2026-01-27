@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import { getGroupLeaderboard, GroupLeaderboardDto } from '../../api/community/friendGroup';
 
 export default function Leaderboard() {
-  const { groupName, groupId, profilePictureUrl } = useLocalSearchParams<{ 
-    groupName: string; 
+  const { groupId } = useLocalSearchParams<{ 
     groupId: string;
-    profilePictureUrl?: string;
   }>();
-  const router = useRouter();
   const [leaderboard, setLeaderboard] = useState<GroupLeaderboardDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('week');
@@ -36,32 +32,6 @@ export default function Leaderboard() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          {profilePictureUrl ? (
-            <Image
-              source={{ uri: profilePictureUrl }}
-              style={styles.headerProfilePicture}
-              contentFit="cover"
-              cachePolicy="disk"
-            />
-          ) : (
-            <View style={styles.headerProfilePicturePlaceholder}>
-              <Text style={styles.headerProfilePictureText}>
-                {(groupName || 'G').charAt(0).toUpperCase()}
-              </Text>
-            </View>
-          )}
-          <Text style={styles.headerTitle}>{groupName || 'Group'}</Text>
-        </View>
-        <View style={styles.placeholder} />
-      </View>
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Leaderboard</Text>
         <View style={styles.periodButtons}>
@@ -136,63 +106,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0d1117',
-    paddingBottom: 60,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(59, 130, 246, 0.2)',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 20,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-  },
-  headerTitleContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  headerProfilePicture: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-    borderWidth: 2,
-    borderColor: 'rgba(59, 130, 246, 0.4)',
-  },
-  headerProfilePicturePlaceholder: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(59, 130, 246, 0.3)',
-    borderWidth: 2,
-    borderColor: 'rgba(59, 130, 246, 0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerProfilePictureText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  placeholder: {
-    width: 40,
   },
   content: {
     flex: 1,

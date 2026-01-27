@@ -131,14 +131,27 @@ const Home: React.FC = () => {
                         <Text style={{ color: "#8b949e", fontSize: 20 }}>?</Text>
                       </View>
                     )}
-                    <View style={{ flex: 1 }}>
+                    <TouchableOpacity
+                      style={{ flex: 1 }}
+                      onPress={() => {
+                        router.push({
+                          pathname: "/stats/exerciseStats" as any,
+                          params: {
+                            exerciseLibraryId: exercise.exerciseLibraryId,
+                            exerciseName: exercise.exerciseName,
+                            exercisePictureUrl: exercise.exercisePictureUrl || "",
+                          },
+                        });
+                      }}
+                      activeOpacity={0.7}
+                    >
                       <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>
                         {exercise.exerciseName}{" "}
                         <Text style={{ color: "#1f6feb", fontSize: 14, fontWeight: "bold" }}>
                           {exercise.exerciseCount}x
                         </Text>
                       </Text>
-                    </View>
+                    </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => {
                         router.push({
