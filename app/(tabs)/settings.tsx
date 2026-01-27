@@ -17,7 +17,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { getCurrentUser, UserDetails, updateUser } from "../api/user";
 import storage from "../api/storage";
 import { useRouter, useFocusEffect } from "expo-router";
-import { useCallback } from "react";  
+import { useCallback } from "react";
+import { logout } from "../api/auth/auth";  
 
 export default function Settings() {
   const router = useRouter();
@@ -136,9 +137,26 @@ export default function Settings() {
 
   const handleLogout = async () => {
   try {
+    // Get tokens before deleting them
+    const refreshToken = await storage.getItemAsync("refreshToken");
+    const pushNotificationToken = await storage.getItemAsync("pushToken");
+    
+    // Call logout API
+    if (refreshToken) {
+      try {
+        await logout(refreshToken, pushNotificationToken);
+      } catch (err) {
+        console.error("Error calling logout API:", err);
+        // Continue with local logout even if API call fails
+      }
+    }
+    
+    // Clear local storage
     await storage.deleteItemAsync("jwt"); // remove your JWT
     await storage.deleteItemAsync("refreshToken"); // remove your refresh token
-    // Optionally, navigate to login
+    await storage.deleteItemAsync("pushToken"); // remove push token
+    
+    // Navigate to login
     router.replace("../(auth)/signin");
   } catch (err) {
     console.error("Error logging out:", err);

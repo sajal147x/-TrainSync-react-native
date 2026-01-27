@@ -21,3 +21,11 @@ export const refreshToken = (refreshToken: string) =>
   refreshClient.post("/auth/refresh", { refreshToken }, {
     validateStatus: (status) => status < 500, // Don't throw for 4xx errors, handle them manually
   });
+
+export const logout = (refreshToken: string, pushNotificationToken: string | null) =>
+  client.post("/auth/logout", { 
+    refreshToken,
+    pushNotificationToken: pushNotificationToken || ""
+  }, {
+    validateStatus: (status) => status < 500, // Don't throw for 4xx errors, handle them manually
+  });
