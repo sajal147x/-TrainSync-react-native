@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Keyboard, Platform } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Client, IMessage } from '@stomp/stompjs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getGroupMessages, GroupMessageDto, sendGroupMessage } from '../../api/community/groupMessaging';
 
 function formatMessageTime(dateString: string): string {
@@ -35,8 +36,11 @@ export default function Messaging() {
   const [messages, setMessages] = useState<GroupMessageDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const stompClientRef = useRef<Client | null>(null);
   const scrollViewRef = useRef<ScrollView | null>(null);
+  const textInputRef = useRef<TextInput | null>(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (groupId) {
@@ -58,6 +62,31 @@ export default function Messaging() {
       }, 100);
     }
   }, [messages, loading]);
+
+  // Handle keyboard show/hide
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+        // Scroll to bottom when keyboard appears
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 250);
+      }
+    );
+    const hideSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const fetchMessages = async () => {
     try {
@@ -217,82 +246,87 @@ export default function Messaging() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      <View style={styles.container}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator color="#fff" size="large" />
-          </View>
-        ) : messages.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No messages yet</Text>
-          </View>
-        ) : (
-          <ScrollView 
-            ref={scrollViewRef}
-            style={styles.messagesContainer}
-            contentContainerStyle={styles.messagesContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            onContentSizeChange={() => {
-              if (!loading && messages.length > 0) {
-                scrollViewRef.current?.scrollToEnd({ animated: false });
-              }
-            }}
-          >
-            {messages.map((msg, index) => {
-              const isSentByMe = msg.isSentByLoggedInUser === 'true' || msg.isSentByLoggedInUser === 'True';
-              return (
+    <View style={styles.container}>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator color="#fff" size="large" />
+        </View>
+      ) : messages.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No messages yet</Text>
+        </View>
+      ) : (
+        <ScrollView 
+          ref={scrollViewRef}
+          style={styles.messagesContainer}
+          contentContainerStyle={[
+            styles.messagesContent,
+            { paddingBottom: keyboardHeight > 0 ? keyboardHeight + 100 : 100 }
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={() => {
+            if (!loading && messages.length > 0) {
+              scrollViewRef.current?.scrollToEnd({ animated: false });
+            }
+          }}
+        >
+          {messages.map((msg, index) => {
+            const isSentByMe = msg.isSentByLoggedInUser === 'true' || msg.isSentByLoggedInUser === 'True';
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.messageWrapper,
+                  isSentByMe ? styles.messageWrapperRight : styles.messageWrapperLeft,
+                ]}
+              >
                 <View
-                  key={index}
                   style={[
-                    styles.messageWrapper,
-                    isSentByMe ? styles.messageWrapperRight : styles.messageWrapperLeft,
+                    styles.messageBubble,
+                    isSentByMe ? styles.messageBubbleRight : styles.messageBubbleLeft,
                   ]}
                 >
-                  <View
-                    style={[
-                      styles.messageBubble,
-                      isSentByMe ? styles.messageBubbleRight : styles.messageBubbleLeft,
-                    ]}
-                  >
-                    <Text style={styles.messageText}>{msg.message}</Text>
-                  </View>
-                  <View style={styles.messageFooter}>
-                    <Text style={styles.messageName}>{msg.userDto.name}</Text>
-                    <Text style={styles.messageTime}>
-                      {' • '}
-                      {formatMessageTime(msg.sentAt)}
-                    </Text>
-                  </View>
+                  <Text style={styles.messageText}>{msg.message}</Text>
                 </View>
-              );
-            })}
-          </ScrollView>
-        )}
+                <View style={styles.messageFooter}>
+                  <Text style={styles.messageName}>{msg.userDto.name}</Text>
+                  <Text style={styles.messageTime}>
+                    {' • '}
+                    {formatMessageTime(msg.sentAt)}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </ScrollView>
+      )}
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Type a message..."
-            placeholderTextColor="#6b7280"
-            value={messageText}
-            onChangeText={setMessageText}
-            multiline
-          />
-          <TouchableOpacity
-            style={styles.sendButton}
-            onPress={handleSendMessage}
-          >
-            <Ionicons name="send" size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
+      <View style={[
+        styles.inputContainer,
+        { 
+          marginBottom: keyboardHeight > 0 ? keyboardHeight - (Platform.OS === 'android' ? insets.bottom : 0) : 0,
+          paddingBottom: Platform.OS === 'android' ? 12 + insets.bottom : 12,
+        }
+      ]}>
+        <TextInput
+          ref={textInputRef}
+          style={styles.input}
+          placeholder="Type a message..."
+          placeholderTextColor="#6b7280"
+          value={messageText}
+          onChangeText={setMessageText}
+          multiline
+          blurOnSubmit={false}
+        />
+        <TouchableOpacity
+          style={styles.sendButton}
+          onPress={handleSendMessage}
+        >
+          <Ionicons name="send" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -371,7 +405,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    paddingBottom: Platform.OS === 'ios' ? 12 : 12,
     borderTopWidth: 1,
     borderTopColor: 'rgba(59, 130, 246, 0.2)',
     backgroundColor: '#0d1117',
