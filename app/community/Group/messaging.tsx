@@ -40,6 +40,7 @@ export default function Messaging() {
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
   const stompClientRef = useRef<Client | null>(null);
+  const scrollViewRef = useRef<ScrollView | null>(null);
 
   useEffect(() => {
     if (groupId) {
@@ -53,11 +54,24 @@ export default function Messaging() {
     };
   }, [groupId]);
 
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messages.length > 0 && !loading) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false });
+      }, 100);
+    }
+  }, [messages, loading]);
+
   const fetchMessages = async () => {
     try {
       setLoading(true);
       const data = await getGroupMessages(groupId);
       setMessages(data);
+      // Scroll to bottom after messages are loaded
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false });
+      }, 100);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
     } finally {
@@ -196,6 +210,11 @@ export default function Messaging() {
       
       // Refresh messages
       await fetchMessages();
+      
+      // Scroll to bottom after sending
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 200);
     } catch (error: any) {
       console.error('Error sending message:', error);
     }
@@ -245,10 +264,16 @@ export default function Messaging() {
           </View>
         ) : (
           <ScrollView 
+            ref={scrollViewRef}
             style={styles.messagesContainer}
             contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            onContentSizeChange={() => {
+              if (!loading && messages.length > 0) {
+                scrollViewRef.current?.scrollToEnd({ animated: false });
+              }
+            }}
           >
             {messages.map((msg, index) => {
               const isSentByMe = msg.isSentByLoggedInUser === 'true' || msg.isSentByLoggedInUser === 'True';

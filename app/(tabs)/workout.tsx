@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, RefreshControl, ScrollView } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,14 +11,17 @@ const Workout: React.FC = () => {
   const [recentWorkouts, setRecentWorkouts] = useState<RecentWorkoutDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadRecentWorkouts();
   }, []);
 
-  const loadRecentWorkouts = async () => {
+  const loadRecentWorkouts = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (!isRefresh) {
+        setLoading(true);
+      }
       setError(null);
       const workouts = await getRecentWorkouts();
       setRecentWorkouts(workouts);
@@ -26,8 +29,16 @@ const Workout: React.FC = () => {
       console.error("Failed to load recent workouts:", err);
       setError("Failed to load recent workouts");
     } finally {
-      setLoading(false);
+      if (!isRefresh) {
+        setLoading(false);
+      }
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadRecentWorkouts(true);
+    setRefreshing(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -41,7 +52,22 @@ const Workout: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#ffffff"
+            colors={["#3b82f6"]}
+            progressBackgroundColor="#0d1117"
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        overScrollMode="always"
+      >
         <Text style={styles.title}>Workout</Text>
         
         <Link href="/workout/new" asChild>
@@ -123,13 +149,13 @@ const Workout: React.FC = () => {
                   </TouchableOpacity>
                 )}
                 style={styles.workoutList}
-                showsVerticalScrollIndicator={false}
-                nestedScrollEnabled={true}
+                scrollEnabled={false}
+                nestedScrollEnabled={false}
               />
             )}
           </View>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -139,10 +165,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0d1117",
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  content: {
     paddingHorizontal: 24,
     paddingTop: 60,
+    paddingBottom: 24,
+    flexGrow: 1,
   },
   title: {
     color: "#fff",
@@ -185,8 +215,8 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   recentWorkoutsContainer: {
-    flex: 1,
     width: "100%",
+    marginTop: 8,
   },
   recentWorkoutsTitle: {
     color: "#fff",
@@ -195,7 +225,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   workoutsListContainer: {
-    maxHeight: 300,
     backgroundColor: "rgba(59, 130, 246, 0.15)",
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.4)",
@@ -253,4 +282,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Workout; // ✅ default export
+export default Workout; // ? default export
