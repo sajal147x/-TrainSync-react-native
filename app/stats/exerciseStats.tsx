@@ -82,9 +82,8 @@ const ExerciseStats: React.FC = () => {
           />
         ) : (
           <LeaderboardTab
-            loading={false}
-            error={null}
-            stats={null}
+            exerciseLibraryId={exerciseLibraryId}
+            statType="total_volume"
           />
         )}
       </View>

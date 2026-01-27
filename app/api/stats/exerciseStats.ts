@@ -39,3 +39,26 @@ export async function getExerciseStatsWithFilters(
   return response.data;
 }
 
+export interface ExerciseLeaderBoardDto {
+  userId: string;
+  name: string;
+  profilePictureUrl: string;
+  statValue: number;
+}
+
+export interface ExerciseLeaderBoardRequest {
+  statType: string;
+  exerciseLibraryId: string;
+}
+
+export async function getExerciseLeaderboard(
+  statType: string,
+  exerciseLibraryId: string
+): Promise<ExerciseLeaderBoardDto[]> {
+  const response = await client.post<ExerciseLeaderBoardDto[]>("/exerciseLeaderboard", {
+    statType: statType,
+    exerciseLibraryId: exerciseLibraryId,
+  });
+  return response.data;
+}
+
