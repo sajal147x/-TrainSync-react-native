@@ -85,13 +85,13 @@ export async function editExercise(
 
 export async function getExercises(
   params?: GetExercisesParams
-): Promise<PageResponse<ExerciseDto>> {
-  const response = await client.get<PageResponse<any>>("/exercises", {
+): Promise<ExerciseDto[]> {
+  const response = await client.get<ExerciseDto[]>("/exercises", {
     params,
   });
 
   // Transform the response to ensure tags are normalized
-  const normalizedExercises = response.data.content.map((exercise: any) => {
+  const normalizedExercises = response.data.map((exercise: any) => {
     const equipmentTag = exercise.equipmentTag || exercise.equipment_tag;
     const muscleTags = exercise.muscleTags || exercise.muscle_tags || [];
     const exercisePictureUrl = exercise.exercisePictureUrl || exercise.exercise_picture_url;
@@ -118,10 +118,7 @@ export async function getExercises(
     };
   });
 
-  return {
-    ...response.data,
-    content: normalizedExercises,
-  };
+  return normalizedExercises;
 }
 
 export async function getMuscleTags(): Promise<MuscleTagDto[]> {

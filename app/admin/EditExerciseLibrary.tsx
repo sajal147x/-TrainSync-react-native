@@ -99,15 +99,13 @@ export default function EditExerciseLibrary() {
           if (append) {
             // Deduplicate by exercise ID to prevent duplicate keys
             const existingIds = new Set(prev.map((ex) => ex.id));
-            const newExercises = data.content.filter(
+            const newExercises = data.filter(
               (ex) => !existingIds.has(ex.id)
             );
             return [...prev, ...newExercises];
           }
-          return data.content;
+          return data;
         });
-        setPage(data.number ?? pageNumber);
-        setHasMore(!data.last);
         lastRequestRef.current = null;
       } catch (err: any) {
         console.error("Error fetching exercises:", err);

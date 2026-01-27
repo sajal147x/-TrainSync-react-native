@@ -24,8 +24,6 @@ import {
 } from "../api/workout/exercises";
 import ExerciseDetailsModal from "../components/ExerciseDetailsModal";
 
-const PAGE_SIZE = 10;
-
 const ExerciseSelection: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -48,13 +46,10 @@ const ExerciseSelection: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
-  const lastRequestRef = useRef<{ page: number; append: boolean } | null>(null);
+  const lastRequestRef = useRef<boolean | null>(null);
 
   useEffect(() => {
-    fetchExercisesPage(0, false);
+    fetchExercises();
     fetchMuscleTags();
     fetchEquipmentTags();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,7 +69,7 @@ const ExerciseSelection: React.FC = () => {
 
       debounceTimeout.current = setTimeout(() => {
         if (searchText.length >= 3 || searchText.length === 0) {
-          fetchExercisesPage(0, false);
+          fetchExercises();
         }
       }, 500); // 500ms debounce
 
@@ -85,20 +80,15 @@ const ExerciseSelection: React.FC = () => {
     };
   }, [searchText, selectedMuscleTag, selectedEquipment]);
 
-  const fetchExercisesPage = useCallback(
-    async (pageNumber: number, append = false) => {
-      if (append) {
-        setIsFetchingMore(true);
-      } else {
-        setLoading(true);
-      }
+  const fetchExercises = useCallback(
+    async () => {
+      setLoading(true);
       setError(null);
-      lastRequestRef.current = { page: pageNumber, append };
+      lastRequestRef.current = true;
 
       try {
         const params: GetExercisesParams = {
-          page: pageNumber,
-          size: PAGE_SIZE,
+          size: 10000, // Fetch all exercises in one call
         };
 
         if (searchText && searchText.length >= 3) {
@@ -113,21 +103,13 @@ const ExerciseSelection: React.FC = () => {
 
         const data = await getExercises(params);
 
-        setExercises((prev) =>
-          append ? [...prev, ...data.content] : data.content
-        );
-        setPage(data.number ?? pageNumber);
-        setHasMore(!data.last);
+        setExercises(data);
         lastRequestRef.current = null;
       } catch (err: any) {
         console.error("Error fetching exercises:", err);
         setError(err.response?.data?.message || "Failed to fetch exercises");
       } finally {
-        if (append) {
-          setIsFetchingMore(false);
-        } else {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     },
     [searchText, selectedMuscleTag, selectedEquipment]
@@ -154,12 +136,7 @@ const ExerciseSelection: React.FC = () => {
   };
 
   const handleRetry = () => {
-    const lastRequest = lastRequestRef.current;
-    if (lastRequest) {
-      fetchExercisesPage(lastRequest.page, lastRequest.append);
-    } else {
-      fetchExercisesPage(0, false);
-    }
+    fetchExercises();
   };
 
   const handleExercisePress = (exercise: ExerciseDto) => {
@@ -171,13 +148,6 @@ const ExerciseSelection: React.FC = () => {
     console.log("Adding exercise to workout:", exercise);
     // TODO: Add exercise to workout and navigate back
     router.back();
-  };
-
-  const handleEndReached = () => {
-    if (loading || isFetchingMore || !hasMore) {
-      return;
-    }
-    fetchExercisesPage(page + 1, true);
   };
 
   const renderExerciseItem = ({ item }: { item: ExerciseDto }) => {
@@ -485,15 +455,6 @@ const ExerciseSelection: React.FC = () => {
               contentContainerStyle={styles.exercisesList}
               style={styles.exercisesFlatList}
               showsVerticalScrollIndicator={false}
-              onEndReached={handleEndReached}
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={
-                isFetchingMore ? (
-                  <View style={styles.loadingMoreContainer}>
-                    <ActivityIndicator size="small" color="#3b82f6" />
-                  </View>
-                ) : null
-              }
             />
           )}
         </>

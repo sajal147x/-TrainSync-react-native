@@ -81,7 +81,7 @@ const ExerciseSelectionModal: React.FC<ExerciseSelectionModalProps> = ({
       const params: GetExercisesParams =
         search && search.length >= 3 ? { searchText: search } : {};
       const data = await getExercises(params);
-      setExercises(data.content);
+      setExercises(data);
     } catch (err: any) {
       console.error("Error fetching exercises:", err);
       setError(err.response?.data?.message || "Failed to fetch exercises");
