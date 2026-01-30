@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, RefreshControl, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
@@ -12,24 +12,35 @@ const PreMadeWorkouts: React.FC = () => {
   const [workouts, setWorkouts] = useState<PreMadeWorkoutListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const fetchWorkouts = async () => {
-      try {
+  const loadWorkouts = async (isRefresh = false) => {
+    try {
+      if (!isRefresh) {
         setLoading(true);
-        setError(null);
-        const data = await getPreMadeWorkouts();
-        setWorkouts(data);
-      } catch (err: any) {
-        console.error("Error fetching pre-made workouts:", err);
-        setError(err.response?.data?.message || "Failed to load workouts");
-      } finally {
+      }
+      setError(null);
+      const data = await getPreMadeWorkouts();
+      setWorkouts(data);
+    } catch (err: any) {
+      console.error("Error fetching pre-made workouts:", err);
+      setError(err.response?.data?.message || "Failed to load workouts");
+    } finally {
+      if (!isRefresh) {
         setLoading(false);
       }
-    };
+    }
+  };
 
-    fetchWorkouts();
+  useEffect(() => {
+    loadWorkouts();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadWorkouts(true);
+    setRefreshing(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -44,7 +55,22 @@ const PreMadeWorkouts: React.FC = () => {
         <View style={styles.placeholder} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#ffffff"
+            colors={["#3b82f6"]}
+            progressBackgroundColor="#0d1117"
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        overScrollMode="always"
+      >
         <TouchableOpacity
           style={styles.buttonContainer}
           onPress={() => router.push("/PreMadeWorkouts/newPreMade")}
@@ -64,37 +90,36 @@ const PreMadeWorkouts: React.FC = () => {
           </BlurView>
         </TouchableOpacity>
 
-        <Text style={styles.title}>Pre-Made Workouts</Text>
 
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#3b82f6" />
-            <Text style={styles.loadingText}>Loading workouts...</Text>
-          </View>
-        ) : error ? (
-          <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle" size={48} color="#ef4444" />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : workouts.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No pre-made workouts available</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={workouts}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.workoutCard}
-                onPress={() => router.push({
-                  pathname: "/PreMadeWorkouts/continue",
-                  params: { preMadeWorkoutId: item.id }
-                })}
-                activeOpacity={0.8}
-              >
-                <BlurView intensity={60} tint="dark" style={styles.cardBlur}>
-                  <View style={styles.cardContent}>
+        <View style={styles.recentWorkoutsContainer}>
+          <Text style={styles.recentWorkoutsTitle}>Pre-Made Workouts</Text>
+
+          <View style={styles.workoutsListContainer}>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color="#fff" size="small" />
+              </View>
+            ) : error ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : workouts.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No pre-made workouts available</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={workouts}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.workoutItem}
+                    activeOpacity={0.7}
+                    onPress={() => router.push({
+                      pathname: "/PreMadeWorkouts/continue",
+                      params: { preMadeWorkoutId: item.id }
+                    })}
+                  >
                     <View style={styles.workoutInfo}>
                       <Text style={styles.workoutName}>{item.name}</Text>
                     </View>
@@ -107,15 +132,16 @@ const PreMadeWorkouts: React.FC = () => {
                     >
                       <Ionicons name="create-outline" size={24} color="#3b82f6" />
                     </TouchableOpacity>
-                  </View>
-                </BlurView>
-              </TouchableOpacity>
+                  </TouchableOpacity>
+                )}
+                style={styles.workoutList}
+                scrollEnabled={false}
+                nestedScrollEnabled={false}
+              />
             )}
-            style={styles.workoutList}
-            contentContainerStyle={styles.workoutListContent}
-          />
-        )}
-      </View>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -145,10 +171,14 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 40,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  content: {
     paddingHorizontal: 24,
     paddingTop: 24,
+    paddingBottom: 24,
+    flexGrow: 1,
   },
   buttonContainer: {
     borderRadius: 16,
@@ -190,63 +220,50 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 24,
   },
+  recentWorkoutsContainer: {
+    width: "100%",
+    marginTop: 8,
+  },
+  recentWorkoutsTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 16,
+  },
+  workoutsListContainer: {
+    padding: 12,
+  },
   loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 48,
-    gap: 16,
-  },
-  loadingText: {
-    color: "#9ca3af",
-    fontSize: 16,
-  },
-  errorContainer: {
-    flex: 1,
     justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 48,
-    gap: 16,
+    paddingVertical: 40,
   },
   errorText: {
     color: "#ef4444",
-    fontSize: 16,
+    fontSize: 14,
     textAlign: "center",
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 48,
+    justifyContent: "center",
+    paddingVertical: 40,
   },
   emptyText: {
     color: "#6b7280",
     fontSize: 14,
     textAlign: "center",
-    marginTop: 16,
   },
   workoutList: {
-    flex: 1,
+    flexGrow: 0,
   },
-  workoutListContent: {
-    paddingBottom: 24,
-  },
-  workoutCard: {
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.2)",
-  },
-  cardBlur: {
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  cardContent: {
-    padding: 16,
+  workoutItem: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(156, 163, 175, 0.3)",
   },
   workoutInfo: {
     flex: 1,
@@ -255,6 +272,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+    marginBottom: 4,
+  },
+  workoutSubtitle: {
+    color: "#9ca3af",
+    fontSize: 14,
   },
   editButton: {
     padding: 8,

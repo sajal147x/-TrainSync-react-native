@@ -121,26 +121,21 @@ const ContinuePreMadeWorkout: React.FC = () => {
 
       <View style={styles.content}>
         <View style={styles.exercisesContainer}>
-          <Text style={styles.sectionTitle}>Exercises</Text>
-          <ScrollView style={styles.exercisesList} showsVerticalScrollIndicator={false}>
-            {workout?.exercises && workout.exercises.length > 0 ? (
-              [...workout.exercises]
-                .sort((a, b) => (a.exerciseOrder || 0) - (b.exerciseOrder || 0))
-                .map((exercise, index) => (
-                <View key={exercise.id} style={styles.exerciseItem}>
-                  {exercise.exercisePictureUrl ? (
-                    <Image
-                      source={{ uri: exercise.exercisePictureUrl }}
-                      style={styles.exerciseImage}
-                    />
-                  ) : (
-                    <View style={styles.exerciseNumber}>
-                      <Text style={styles.exerciseNumberText}>{exercise.exerciseOrder || index + 1}</Text>
-                    </View>
-                  )}
-                  <Text style={styles.exerciseName}>{exercise.name}</Text>
+          <Text style={styles.sectionTitle}>
+            Exercises ({workout?.exercises?.length || 0})
+          </Text>
+          <View style={styles.exercisesListWrapper}>
+            <ScrollView style={styles.exercisesList} showsVerticalScrollIndicator={false}>
+              {workout?.exercises && workout.exercises.length > 0 ? (
+                [...workout.exercises]
+                  .sort((a, b) => (a.exerciseOrder || 0) - (b.exerciseOrder || 0))
+                  .map((exercise, index, array) => (
                   <TouchableOpacity
-                    style={styles.editButton}
+                    key={exercise.id}
+                    style={[
+                      styles.exerciseItem,
+                      index < array.length - 1 && styles.exerciseItemWithBorder
+                    ]}
                     onPress={() => router.push({
                       pathname: "/PreMadeWorkouts/EditExercise",
                       params: {
@@ -151,16 +146,40 @@ const ContinuePreMadeWorkout: React.FC = () => {
                     })}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="create-outline" size={20} color="#3b82f6" />
+                    {exercise.exercisePictureUrl ? (
+                      <Image
+                        source={{ uri: exercise.exercisePictureUrl }}
+                        style={styles.exerciseImage}
+                      />
+                    ) : (
+                      <View style={styles.exerciseNumber}>
+                        <Text style={styles.exerciseNumberText}>{exercise.exerciseOrder || index + 1}</Text>
+                      </View>
+                    )}
+                    <Text style={styles.exerciseName}>{exercise.name}</Text>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => router.push({
+                        pathname: "/PreMadeWorkouts/EditExercise",
+                        params: {
+                          exerciseId: exercise.id,
+                          exerciseName: exercise.name,
+                          exercisePictureUrl: exercise.exercisePictureUrl || "",
+                        }
+                      })}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="create-outline" size={20} color="#3b82f6" />
+                    </TouchableOpacity>
                   </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>No exercises found</Text>
                 </View>
-              ))
-            ) : (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>No exercises found</Text>
-              </View>
-            )}
-          </ScrollView>
+              )}
+            </ScrollView>
+          </View>
         </View>
 
         <TouchableOpacity
@@ -264,7 +283,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   exercisesContainer: {
-    flex: 1,
+    alignSelf: "stretch",
   },
   sectionTitle: {
     color: "#fff",
@@ -272,37 +291,42 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 16,
   },
+  exercisesListWrapper: {
+    overflow: "hidden",
+    maxHeight: 400,
+    padding: 12,
+  },
   exercisesList: {
-    flex: 1,
+    // ScrollView will size to content, constrained by parent maxHeight
   },
   exerciseItem: {
-    backgroundColor: "rgba(31, 41, 55, 0.6)",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.2)",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 16,
+  },
+  exerciseItemWithBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(156, 163, 175, 0.3)",
   },
   exerciseNumber: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: "rgba(59, 130, 246, 0.2)",
     justifyContent: "center",
     alignItems: "center",
   },
   exerciseNumberText: {
     color: "#3b82f6",
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: "700",
   },
   exerciseImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: "rgba(59, 130, 246, 0.2)",
   },
   exerciseName: {
@@ -312,7 +336,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   editButton: {
-    padding: 8,
+    padding: 4,
+    marginRight: 8,
   },
   emptyState: {
     padding: 32,

@@ -26,6 +26,8 @@ const ContinueWorkout: React.FC = () => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showExerciseMenuDialog, setShowExerciseMenuDialog] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState<ExerciseDto | null>(null);
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -105,14 +107,8 @@ const ContinueWorkout: React.FC = () => {
                       index < array.length - 1 && styles.exerciseItemWithBorder
                     ]}
                     onPress={() => {
-                      router.push({
-                        pathname: "/stats/exerciseStats",
-                        params: {
-                          exerciseLibraryId: exercise.exerciseLibraryId || "",
-                          exerciseName: exercise.name || "",
-                          exercisePictureUrl: exercise.exercisePictureUrl || "",
-                        },
-                      });
+                      setSelectedExercise(exercise);
+                      setShowExerciseMenuDialog(true);
                     }}
                     activeOpacity={0.7}
                   >
@@ -128,20 +124,10 @@ const ContinueWorkout: React.FC = () => {
                   )}
                   <Text style={styles.exerciseName}>{exercise.name}</Text>
                   <TouchableOpacity
-                    onPress={() => {
-                      router.push({
-                        pathname: "/workout/EditExercise" as any,
-                        params: {
-                          exerciseId: exercise.id,
-                          exerciseName: exercise.name,
-                          exercisePictureUrl: exercise.exercisePictureUrl || "",
-                          preFilledFlag: exercise.preFilledFlag || "",
-                          preFilledDate: exercise.preFilledDate || "",
-                          preFilledWorkoutName: exercise.preFilledWorkoutName || "",
-                          workoutId: workoutId,
-                          exerciseLibraryId: exercise.exerciseLibraryId || "",
-                        },
-                      });
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      setSelectedExercise(exercise);
+                      setShowExerciseMenuDialog(true);
                     }}
                     style={styles.editButton}
                   >
@@ -334,6 +320,91 @@ const ContinueWorkout: React.FC = () => {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* Exercise action menu - bottom sheet */}
+      <Modal
+        visible={showExerciseMenuDialog}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowExerciseMenuDialog(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowExerciseMenuDialog(false)}
+        >
+          <View style={styles.modalBackdrop} />
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={styles.exerciseMenuSheet}
+          >
+            <SafeAreaView edges={["top", "bottom"]} style={styles.modalSafeArea}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle} numberOfLines={1}>
+                  {selectedExercise?.name || "Exercise"}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowExerciseMenuDialog(false);
+                    setSelectedExercise(null);
+                  }}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.modalBody}>
+                <TouchableOpacity
+                  style={styles.modalOptionButton}
+                  onPress={() => {
+                    if (!selectedExercise) return;
+                    setShowExerciseMenuDialog(false);
+                    router.push({
+                      pathname: "/workout/EditExercise" as any,
+                      params: {
+                        exerciseId: selectedExercise.id,
+                        exerciseName: selectedExercise.name,
+                        exercisePictureUrl: selectedExercise.exercisePictureUrl || "",
+                        preFilledFlag: selectedExercise.preFilledFlag || "",
+                        preFilledDate: selectedExercise.preFilledDate || "",
+                        preFilledWorkoutName: selectedExercise.preFilledWorkoutName || "",
+                        workoutId: workoutId,
+                        exerciseLibraryId: selectedExercise.exerciseLibraryId || "",
+                      },
+                    });
+                    setSelectedExercise(null);
+                  }}
+                >
+                  <Ionicons name="create-outline" size={24} color="#3b82f6" />
+                  <Text style={styles.modalOptionText}>Edit Exercise Sets/Reps</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalOptionButton, styles.modalOptionButtonWithMargin]}
+                  onPress={() => {
+                    if (!selectedExercise) return;
+                    setShowExerciseMenuDialog(false);
+                    router.push({
+                      pathname: "/stats/exerciseStats" as any,
+                      params: {
+                        exerciseLibraryId: selectedExercise.exerciseLibraryId || "",
+                        exerciseName: selectedExercise.name,
+                        exercisePictureUrl: selectedExercise.exercisePictureUrl || "",
+                      },
+                    });
+                    setSelectedExercise(null);
+                  }}
+                >
+                  <Ionicons name="stats-chart-outline" size={24} color="#3b82f6" />
+                  <Text style={styles.modalOptionText}>See Exercise Stats/Progression</Text>
+                </TouchableOpacity>
+              </View>
+            </SafeAreaView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -453,10 +524,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   exercisesListWrapper: {
-    backgroundColor: "rgba(59, 130, 246, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.4)",
-    borderRadius: 12,
     overflow: "hidden",
     maxHeight: 400,
     padding: 12,
@@ -636,6 +703,19 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  exerciseMenuSheet: {
+    backgroundColor: "#0d1117",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    width: "100%",
+    minHeight: 280,
+    maxHeight: "40%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
   },
 });
 

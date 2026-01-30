@@ -285,10 +285,6 @@ const styles = StyleSheet.create({
   },
   friendsListContainer: {
     maxHeight: 300,
-    backgroundColor: "rgba(59, 130, 246, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.4)",
-    borderRadius: 12,
     padding: 12,
   },
   friendsScrollView: {
@@ -346,10 +342,6 @@ const styles = StyleSheet.create({
   },
   groupsListContainer: {
     maxHeight: 300,
-    backgroundColor: "rgba(59, 130, 246, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.4)",
-    borderRadius: 12,
     padding: 12,
   },
   groupsScrollView: {
