@@ -393,10 +393,6 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   fieldsContainer: {
-    backgroundColor: "rgba(59, 130, 246, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.4)",
-    borderRadius: 12,
     padding: 12,
     marginBottom: 24,
   },
