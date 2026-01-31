@@ -7,7 +7,7 @@ This repository contains the **frontend** for TrainSync, a cross-platform mobile
 The app is designed to work with a **Java (Spring Boot) backend**, which is maintained in a **separate repository**.
 
 👉 **Backend repository:**  
-🔗 https://github.com/<your-username>/<backend-repo-name>
+🔗 https://github.com/sajal147x/TrainSync-backend
 
 ---
 
@@ -18,20 +18,6 @@ The app is designed to work with a **Java (Spring Boot) backend**, which is main
 - File-based routing using **Expo Router**
 - Modern, responsive UI
 - Designed to consume a REST API backend
-
----
-
-## 📸 Screenshots
-
-> _Screenshots coming soon_
-
-| Screen | Preview |
-|------|--------|
-| Home | ![Home Screen](./screenshots/home.png) |
-| Workout / Feature | ![Feature Screen](./screenshots/feature.png) |
-| Profile | ![Profile Screen](./screenshots/profile.png) |
-
-> Create a `screenshots/` folder in the root and replace these images.
 
 ---
 
