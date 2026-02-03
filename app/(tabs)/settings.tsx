@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -18,7 +19,7 @@ import { getCurrentUser, UserDetails, updateUser } from "../api/user";
 import storage from "../api/storage";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { logout } from "../api/auth/auth";  
+import { logout, deleteAccount } from "../api/auth/auth";  
 
 export default function Settings() {
   const router = useRouter();
@@ -30,6 +31,8 @@ export default function Settings() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null); // URI for display
   const [selectedImageBase64, setSelectedImageBase64] = useState<string | null>(null); // Base64 for upload
   const [uploading, setUploading] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
 
   // Fetch user data on mount
   useEffect(() => {
@@ -162,6 +165,28 @@ export default function Settings() {
     console.error("Error logging out:", err);
   }
 };
+
+  const handleDeleteAccountPress = () => setShowDeleteAccountDialog(true);
+
+  const confirmDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      const res = await deleteAccount();
+      setShowDeleteAccountDialog(false);
+      if (res.status >= 200 && res.status < 300) {
+        await handleLogout();
+      } else {
+        Alert.alert("Error", res.data?.message || "Failed to delete account.");
+      }
+    } catch (err) {
+      console.error("Error deleting account:", err);
+      setShowDeleteAccountDialog(false);
+      Alert.alert("Error", "Failed to delete account. Please try again.");
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -344,29 +369,97 @@ export default function Settings() {
             </View>
           )}
 
-          {/* Log Out Button */}
-          <TouchableOpacity
-            style={styles.liquidGlassButtonLogout}
-            onPress={handleLogout}
-            activeOpacity={0.8}
-          >
-            <BlurView intensity={80} tint="dark" style={styles.blurView}>
-              <LinearGradient
-                colors={["rgba(59, 130, 246, 0.25)", "rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.25)"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradientOverlay}
-              >
-                <View style={styles.buttonInner}>
-                  <Text style={styles.liquidGlassButtonText}>Log Out</Text>
-                </View>
-              </LinearGradient>
-            </BlurView>
-          </TouchableOpacity>
+          {/* Log Out and Delete Account Buttons */}
+          <View style={styles.logoutRow}>
+            <TouchableOpacity
+              style={styles.liquidGlassButtonLogout}
+              onPress={handleLogout}
+              activeOpacity={0.8}
+            >
+              <BlurView intensity={80} tint="dark" style={styles.blurView}>
+                <LinearGradient
+                  colors={["rgba(59, 130, 246, 0.25)", "rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.25)"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientOverlay}
+                >
+                  <View style={styles.buttonInner}>
+                    <Text style={styles.liquidGlassButtonText}>Log Out</Text>
+                  </View>
+                </LinearGradient>
+              </BlurView>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.deleteAccountButton}
+              onPress={handleDeleteAccountPress}
+              disabled={deletingAccount}
+              activeOpacity={0.8}
+            >
+              <BlurView intensity={80} tint="dark" style={styles.blurView}>
+                <LinearGradient
+                  colors={["rgba(220, 38, 38, 0.4)", "rgba(185, 28, 28, 0.3)", "rgba(220, 38, 38, 0.4)"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientOverlay}
+                >
+                  <View style={styles.buttonInner}>
+                    {deletingAccount ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={styles.deleteAccountButtonText}>Delete Account</Text>
+                    )}
+                  </View>
+                </LinearGradient>
+              </BlurView>
+            </TouchableOpacity>
+          </View>
         </>
       ) : (
         <Text style={styles.label}>Not logged in</Text>
       )}
+
+      {/* Delete Account Confirmation Dialog */}
+      <Modal
+        visible={showDeleteAccountDialog}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowDeleteAccountDialog(false)}
+      >
+        <View style={styles.deleteDialogOverlay}>
+          <TouchableOpacity
+            style={styles.deleteDialogBackdrop}
+            activeOpacity={1}
+            onPress={() => setShowDeleteAccountDialog(false)}
+          />
+          <View style={styles.deleteDialogContent}>
+            <Text style={styles.deleteDialogTitle}>Delete Account</Text>
+            <Text style={styles.deleteDialogMessage}>
+              Are you sure you want to delete your account?
+            </Text>
+            <View style={styles.deleteDialogButtons}>
+              <TouchableOpacity
+                style={styles.deleteDialogCancelButton}
+                onPress={() => setShowDeleteAccountDialog(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.deleteDialogCancelText}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteDialogConfirmButton}
+                onPress={confirmDeleteAccount}
+                activeOpacity={0.8}
+                disabled={deletingAccount}
+              >
+                {deletingAccount ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.deleteDialogConfirmText}>Yes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -509,11 +602,16 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
+  logoutRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    marginTop: 20,
+  },
   liquidGlassButtonLogout: {
     borderRadius: 12,
     overflow: "hidden",
-    alignSelf: "center",
-    marginTop: 20,
     minWidth: 120,
     borderWidth: 1,
     borderColor: "rgba(59, 130, 246, 0.5)",
@@ -522,6 +620,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 10,
+  },
+  deleteAccountButton: {
+    borderRadius: 12,
+    overflow: "hidden",
+    minWidth: 120,
+    borderWidth: 1,
+    borderColor: "rgba(220, 38, 38, 0.6)",
+    shadowColor: "#dc2626",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  deleteAccountButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   adminButtonsRow: {
     flexDirection: "row",
@@ -547,5 +665,76 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  deleteDialogOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  deleteDialogBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  deleteDialogContent: {
+    backgroundColor: "#1f2937",
+    borderRadius: 16,
+    padding: 24,
+    width: "85%",
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.3)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  deleteDialogTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  deleteDialogMessage: {
+    color: "#9ca3af",
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  deleteDialogButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  deleteDialogCancelButton: {
+    flex: 1,
+    backgroundColor: "rgba(156, 163, 175, 0.2)",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(156, 163, 175, 0.3)",
+  },
+  deleteDialogCancelText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  deleteDialogConfirmButton: {
+    flex: 1,
+    backgroundColor: "#ef4444",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.5)",
+  },
+  deleteDialogConfirmText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

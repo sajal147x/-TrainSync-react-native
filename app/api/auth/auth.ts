@@ -29,3 +29,8 @@ export const logout = (refreshToken: string, pushNotificationToken: string | nul
   }, {
     validateStatus: (status) => status < 500, // Don't throw for 4xx errors, handle them manually
   });
+
+export const deleteAccount = () =>
+  client.post("/auth/delete-account", {}, {
+    validateStatus: (status) => status < 500,
+  });
