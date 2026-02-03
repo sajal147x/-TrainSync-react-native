@@ -122,12 +122,38 @@ const ContinueWorkout: React.FC = () => {
                       <Text style={styles.exerciseNumberText}>{exercise.exerciseOrder || index + 1}</Text>
                     </View>
                   )}
-                  <Text style={styles.exerciseName}>{exercise.name}</Text>
+                  <View style={styles.exerciseNameBlock}>
+                    <Text style={styles.exerciseName}>{exercise.name}</Text>
+                    {exercise.sets && exercise.sets.length > 0 && (
+                      <View style={styles.exerciseSetsBlock}>
+                        {[...exercise.sets]
+                          .sort((a, b) => (a.setNumber ?? 0) - (b.setNumber ?? 0))
+                          .map((s, i) => (
+                            <View key={s.id} style={styles.exerciseSetBox}>
+                              <Text style={styles.exerciseSetsLine}>
+                                {s.weight} lbs x {s.reps}
+                              </Text>
+                            </View>
+                          ))}
+                      </View>
+                    )}
+                  </View>
                   <TouchableOpacity
                     onPress={(e) => {
                       e.stopPropagation();
-                      setSelectedExercise(exercise);
-                      setShowExerciseMenuDialog(true);
+                      router.push({
+                        pathname: "/workout/EditExercise" as any,
+                        params: {
+                          exerciseId: exercise.id,
+                          exerciseName: exercise.name,
+                          exercisePictureUrl: exercise.exercisePictureUrl || "",
+                          preFilledFlag: exercise.preFilledFlag || "",
+                          preFilledDate: exercise.preFilledDate || "",
+                          preFilledWorkoutName: exercise.preFilledWorkoutName || "",
+                          workoutId,
+                          exerciseLibraryId: exercise.exerciseLibraryId || "",
+                        },
+                      });
                     }}
                     style={styles.editButton}
                   >
@@ -561,11 +587,33 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: "rgba(59, 130, 246, 0.2)",
   },
+  exerciseNameBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
   exerciseName: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-    flex: 1,
+  },
+  exerciseSetsBlock: {
+    marginTop: 4,
+    gap: 4,
+  },
+  exerciseSetBox: {
+    backgroundColor: "rgba(156, 163, 175, 0.15)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+  },
+  exerciseSetsLine: {
+    color: "#9ca3af",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  exerciseSetLabel: {
+    color: "#3b82f6",
   },
   editButton: {
     padding: 4,
