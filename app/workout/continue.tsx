@@ -95,7 +95,7 @@ const ContinueWorkout: React.FC = () => {
             Exercises ({workout?.exercises?.length || 0})
           </Text>
           <View style={styles.exercisesListWrapper}>
-            <ScrollView style={styles.exercisesList} showsVerticalScrollIndicator={false}>
+            <ScrollView style={styles.exercisesList} contentContainerStyle={styles.exercisesListContent} showsVerticalScrollIndicator={false}>
               {workout?.exercises && workout.exercises.length > 0 ? (
                 [...workout.exercises]
                   .sort((a, b) => (a.exerciseOrder || 0) - (b.exerciseOrder || 0))
@@ -170,7 +170,7 @@ const ContinueWorkout: React.FC = () => {
           </View>
         </View>
 
-        <View style={styles.buttonsContainer}>
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.continueButton}
             activeOpacity={0.8}
@@ -530,10 +530,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 32,
   },
-  buttonsContainer: {
-    marginTop: 24,
+  buttonContainer: {
+    paddingBottom: 16,
     gap: 12,
   },
   centerContent: {
@@ -541,7 +540,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   exercisesContainer: {
-    alignSelf: "stretch",
+    flex: 1,
+    minHeight: 0,
   },
   sectionTitle: {
     color: "#fff",
@@ -550,12 +550,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   exercisesListWrapper: {
-    overflow: "hidden",
-    maxHeight: 400,
+    flex: 1,
+    minHeight: 0,
     padding: 12,
   },
   exercisesList: {
-    // ScrollView will size to content, constrained by parent maxHeight
+    flex: 1,
+  },
+  exercisesListContent: {
+    flexGrow: 1,
+    paddingBottom: 16,
   },
   exerciseItem: {
     paddingVertical: 12,
@@ -638,7 +642,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
-    marginBottom: 12,
   },
   blurView: {
     borderRadius: 12,

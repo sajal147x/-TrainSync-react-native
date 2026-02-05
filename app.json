@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "icon": "./assets/icon.png",
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "com.trainsync.app",
       "buildNumber": "1",
       "infoPlist": {
