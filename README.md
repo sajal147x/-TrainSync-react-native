@@ -6,12 +6,12 @@ This repository contains the **frontend** for TrainSync, a cross-platform mobile
 
 The app is designed to work with a **Java (Spring Boot) backend**, which is maintained in a **separate repository**.
 
-👉 **Backend repository:**  
+ **Backend repository:**  
 🔗 https://github.com/sajal147x/TrainSync-backend
 
 ---
 
-## ✨ Features
+##  Features
 
 - Cross-platform support (iOS & Android)
 - Built with **React Native + Expo**
@@ -21,7 +21,7 @@ The app is designed to work with a **Java (Spring Boot) backend**, which is main
 
 ---
 
-## 🧱 Tech Stack
+##  Tech Stack
 
 - React Native
 - Expo
@@ -31,7 +31,7 @@ The app is designed to work with a **Java (Spring Boot) backend**, which is main
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
