@@ -11,41 +11,17 @@ The app is designed to work with a **Java (Spring Boot) backend**, which is main
 
 ---
 
-##  Features
+**SETUP GUIDE**
 
-- Cross-platform support (iOS & Android)
-- Built with **React Native + Expo**
-- File-based routing using **Expo Router**
-- Modern, responsive UI
-- Designed to consume a REST API backend
+**INSTALLATION**
+node -v     
+npm -v
 
----
+npm install -g expo
 
-##  Tech Stack
+* in client.ts file change the path to localhost:8080
 
-- React Native
-- Expo
-- Expo Router
-- JavaScript / TypeScript
-- REST API integration
 
----
+**START PROJECT**
+npx expo start
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js (18+ recommended)
-- npm or yarn
-- Expo CLI
-- iOS Simulator (macOS) or Android Emulator
-
----
-
-### Installation
-
-1. Clone the repository
-
-```bash
-git clone https://github.com/<your-username>/<frontend-repo-name>.git
-cd <frontend-repo-name>
