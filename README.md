@@ -14,12 +14,14 @@ The app is designed to work with a **Java (Spring Boot) backend**, which is main
 **SETUP GUIDE**
 
 **INSTALLATION**
+
 node -v     
 npm -v
 
 npm install -g expo
 
-* in client.ts file change the path to localhost:8080
+* in client.ts file set API_BASE to localhost:8080
+* API_BASE = process.env.EXPO_PUBLIC_API_URL
 
 
 **START PROJECT**
