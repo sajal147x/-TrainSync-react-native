@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Keyboard, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Keyboard, Platform, Modal, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Client, IMessage } from '@stomp/stompjs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getGroupMessages, GroupMessageDto, sendGroupMessage } from '../../api/community/groupMessaging';
+import { flagContent } from '../../api/objectionableContent';
 
 function formatMessageTime(dateString: string): string {
   const date = new Date(dateString);
@@ -41,6 +42,10 @@ export default function Messaging() {
   const scrollViewRef = useRef<ScrollView | null>(null);
   const textInputRef = useRef<TextInput | null>(null);
   const insets = useSafeAreaInsets();
+  const [flagDialogVisible, setFlagDialogVisible] = useState(false);
+  const [flagReportText, setFlagReportText] = useState('');
+  const [flagSubmitting, setFlagSubmitting] = useState(false);
+  const [reportSubmittedDialogVisible, setReportSubmittedDialogVisible] = useState(false);
 
   useEffect(() => {
     if (groupId) {
@@ -245,8 +250,45 @@ export default function Messaging() {
     }
   };
 
+  const openFlagDialog = () => {
+    setFlagReportText('');
+    setFlagDialogVisible(true);
+  };
+
+  const closeFlagDialog = () => {
+    setFlagDialogVisible(false);
+    setFlagReportText('');
+    setFlagSubmitting(false);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!groupId) return;
+    const trimmed = flagReportText.trim();
+    if (!trimmed) {
+      Alert.alert('Required', 'Please explain the issue before submitting.');
+      return;
+    }
+    try {
+      setFlagSubmitting(true);
+      await flagContent({ groupId, text: trimmed });
+      closeFlagDialog();
+      setReportSubmittedDialogVisible(true);
+    } catch (error: any) {
+      console.error('Error flagging content:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to submit report. Please try again.');
+    } finally {
+      setFlagSubmitting(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
+      <View style={styles.flagHeader}>
+        <TouchableOpacity style={styles.flagButton} onPress={openFlagDialog}>
+          <Ionicons name="flag-outline" size={18} color="rgba(255,255,255,0.8)" />
+          <Text style={styles.flagButtonText}>Flag content</Text>
+        </TouchableOpacity>
+      </View>
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator color="#fff" size="large" />
@@ -326,6 +368,78 @@ export default function Messaging() {
           <Ionicons name="send" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={flagDialogVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeFlagDialog}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          style={styles.flagModalOverlay}
+          onPress={closeFlagDialog}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} style={styles.flagModalContent}>
+            <Text style={styles.flagModalTitle}>Flag content</Text>
+            <Text style={styles.flagModalPrompt}>Please explain the issue:</Text>
+            <TextInput
+              style={styles.flagModalInput}
+              placeholder="Describe the objectionable content..."
+              placeholderTextColor="#6b7280"
+              value={flagReportText}
+              onChangeText={setFlagReportText}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              editable={!flagSubmitting}
+            />
+            <View style={styles.flagModalActions}>
+              <TouchableOpacity style={styles.flagModalCancel} onPress={closeFlagDialog} disabled={flagSubmitting}>
+                <Text style={styles.flagModalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.flagModalSubmit, flagSubmitting && styles.flagModalSubmitDisabled]}
+                onPress={handleSubmitReport}
+                disabled={flagSubmitting}
+              >
+                {flagSubmitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.flagModalSubmitText}>Submit report</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      <Modal
+        visible={reportSubmittedDialogVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setReportSubmittedDialogVisible(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          style={styles.flagModalOverlay}
+          onPress={() => setReportSubmittedDialogVisible(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={styles.reportSubmittedDialogContent}
+          >
+            <Text style={styles.flagModalTitle}>Report submitted</Text>
+            <TouchableOpacity
+              style={styles.reportSubmittedOkButton}
+              onPress={() => setReportSubmittedDialogVisible(false)}
+            >
+              <Text style={styles.flagModalSubmitText}>OK</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -428,6 +542,108 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(59, 130, 246, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  flagHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  flagButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  flagButtonText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+  },
+  flagModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  flagModalContent: {
+    backgroundColor: '#161b22',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 360,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  flagModalTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  flagModalPrompt: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  flagModalInput: {
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: '#fff',
+    fontSize: 15,
+    minHeight: 100,
+    marginBottom: 16,
+  },
+  flagModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  flagModalCancel: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  flagModalCancelText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 15,
+  },
+  flagModalSubmit: {
+    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  flagModalSubmitDisabled: {
+    opacity: 0.7,
+  },
+  flagModalSubmitText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  reportSubmittedDialogContent: {
+    backgroundColor: '#161b22',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 320,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+    alignItems: 'center',
+  },
+  reportSubmittedOkButton: {
+    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    marginTop: 16,
+    minWidth: 80,
+    alignItems: 'center',
   },
 });
 
