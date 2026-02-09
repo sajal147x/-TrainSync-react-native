@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, TouchableOpacity, Modal } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import { getFriendWorkoutSummary, FriendWorkoutSummaryDto } from "../api/community/friendWorkoutSummary";
+import { blockUser } from "../api/objectionableContent";
 
 const FriendDetails: React.FC = () => {
   const params = useLocalSearchParams();
@@ -13,6 +14,8 @@ const FriendDetails: React.FC = () => {
 
   const [summary, setSummary] = useState<FriendWorkoutSummaryDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const [blockDialogVisible, setBlockDialogVisible] = useState(false);
+  const [blocking, setBlocking] = useState(false);
 
   useEffect(() => {
     fetchWorkoutSummary();
@@ -65,6 +68,14 @@ const FriendDetails: React.FC = () => {
             </View>
           )}
           <Text style={styles.name}>{friendName}</Text>
+
+          <TouchableOpacity
+            style={styles.blockButton}
+            onPress={() => setBlockDialogVisible(true)}
+          >
+            <Ionicons name="ban" size={18} color="#ef4444" />
+            <Text style={styles.blockButtonText}>Block user</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Summary Section */}
@@ -112,6 +123,61 @@ const FriendDetails: React.FC = () => {
           )}
         </View>
       </ScrollView>
+
+      <Modal
+        visible={blockDialogVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setBlockDialogVisible(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          style={styles.modalOverlay}
+          onPress={() => setBlockDialogVisible(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={styles.modalContent}
+          >
+            <Text style={styles.modalTitle}>Block user</Text>
+            <Text style={styles.modalMessage}>
+              Blocking the user will remove the user from your feed and any group chats with the user will be deleted.
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setBlockDialogVisible(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalBlockButton}
+                onPress={async () => {
+                  if (blocking) return;
+                  setBlocking(true);
+                  try {
+                    await blockUser({ userId: friendUserId });
+                    setBlockDialogVisible(false);
+                    router.replace("/(tabs)/community");
+                  } catch (error: any) {
+                    console.error("Error blocking user:", error);
+                  } finally {
+                    setBlocking(false);
+                  }
+                }}
+                disabled={blocking}
+              >
+                {blocking ? (
+                  <ActivityIndicator color="#ef4444" size="small" />
+                ) : (
+                  <Text style={styles.modalBlockText}>Block</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -173,6 +239,78 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 28,
     fontWeight: "700",
+  },
+  blockButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.5)",
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+  },
+  blockButtonText: {
+    color: "#ef4444",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: "#161b22",
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    maxWidth: 340,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+  },
+  modalTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 16,
+  },
+  modalMessage: {
+    color: "#9ca3af",
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "flex-end",
+  },
+  modalCancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
+  },
+  modalCancelText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modalBlockButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: "rgba(239, 68, 68, 0.2)",
+  },
+  modalBlockText: {
+    color: "#ef4444",
+    fontSize: 16,
+    fontWeight: "600",
   },
   summarySection: {
     marginTop: 16,

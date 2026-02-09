@@ -383,6 +383,7 @@ export default function Messaging() {
           <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} style={styles.flagModalContent}>
             <Text style={styles.flagModalTitle}>Flag content</Text>
             <Text style={styles.flagModalPrompt}>Please explain the issue:</Text>
+            <Text style={styles.flagModalBlockHint}>You can also block users by going into friends section and clicking on their profile.</Text>
             <TextInput
               style={styles.flagModalInput}
               placeholder="Describe the objectionable content..."
@@ -586,6 +587,12 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     fontSize: 14,
     marginBottom: 10,
+  },
+  flagModalBlockHint: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13,
+    marginBottom: 12,
+    fontStyle: 'italic',
   },
   flagModalInput: {
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
