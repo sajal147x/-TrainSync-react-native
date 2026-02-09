@@ -34,11 +34,7 @@ export default function SignUp() {
   const handleSignUp = async () => {
     setErrorMessage(""); // Clear previous errors
     try {
-      const ageNumber = parseInt(age, 10);
-      if (!age || isNaN(ageNumber)) {
-        setErrorMessage("Please enter a valid age");
-        return;
-      }
+      const ageNumber = age ? (parseInt(age, 10) || undefined) : undefined;
       const response = await signUp(username, password, name, email, ageNumber);
       
       // Check response immediately - if 401 with "User Already Exists", show error and return
@@ -116,7 +112,7 @@ export default function SignUp() {
           />
 
           {/* Age */}
-          <Text style={[styles.label, { marginTop: 16 }]}>Age</Text>
+          <Text style={[styles.label, { marginTop: 16 }]}>Age (optional)</Text>
           <TextInput
             value={age}
             onChangeText={handleAgeChange}

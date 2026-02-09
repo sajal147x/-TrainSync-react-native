@@ -7,8 +7,8 @@ const refreshClient = axios.create({
   baseURL: API_BASE,
 });
 
-export const signUp = (username: string, password: string, name: string, email: string, age: number) =>
-  client.post("/auth/signup", { username, password, name, email, age }, {
+export const signUp = (username: string, password: string, name: string, email: string, age?: number) =>
+  client.post("/auth/signup", { username, password, name, email, ...(age != null && !isNaN(age) ? { age } : {}) }, {
     validateStatus: (status) => status < 500, // Don't throw for 4xx errors, handle them manually
   });
 
