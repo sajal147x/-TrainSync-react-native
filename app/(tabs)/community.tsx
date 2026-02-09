@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator, RefreshControl } from "react-native";
 import { Link, useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { getFriendsForUser, FriendsResponseDto } from "../api/community/community";
@@ -15,12 +14,10 @@ const Community: React.FC = () => {
   const [groupsLoading, setGroupsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchFriends();
-      fetchGroups();
-    }, [])
-  );
+  useEffect(() => {
+    fetchFriends();
+    fetchGroups();
+  }, []);
 
   const fetchFriends = async () => {
     try {
