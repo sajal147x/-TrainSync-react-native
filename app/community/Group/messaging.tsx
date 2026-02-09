@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Keyboard, Platform, Modal, Alert } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Client, IMessage } from '@stomp/stompjs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,6 +34,7 @@ export default function Messaging() {
   const { groupId } = useLocalSearchParams<{ 
     groupId: string;
   }>();
+  const router = useRouter();
   const [messages, setMessages] = useState<GroupMessageDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
@@ -383,7 +384,17 @@ export default function Messaging() {
           <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} style={styles.flagModalContent}>
             <Text style={styles.flagModalTitle}>Flag content</Text>
             <Text style={styles.flagModalPrompt}>Please explain the issue:</Text>
-            <Text style={styles.flagModalBlockHint}>You can also block users by going into friends section and clicking on their profile.</Text>
+            <Text style={styles.flagModalBlockHint}>You can block users from the Community tab via Friends and their profile.</Text>
+            <TouchableOpacity
+              onPress={() => {
+                closeFlagDialog();
+                router.dismissTo('/(tabs)/community');
+              }}
+              style={styles.flagModalBlockLink}
+            >
+              <Ionicons name="ban-outline" size={16} color="rgba(59, 130, 246, 0.9)" />
+              <Text style={styles.flagModalBlockLinkText}>Block User(s)</Text>
+            </TouchableOpacity>
             <TextInput
               style={styles.flagModalInput}
               placeholder="Describe the objectionable content..."
@@ -587,6 +598,19 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     fontSize: 14,
     marginBottom: 10,
+  },
+  flagModalBlockLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+    paddingVertical: 6,
+  },
+  flagModalBlockLinkText: {
+    color: 'rgba(59, 130, 246, 0.9)',
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   flagModalBlockHint: {
     color: 'rgba(255,255,255,0.6)',
