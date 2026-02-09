@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -202,19 +203,25 @@ export default function Settings() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
-        {!isEditing && user && (
-          <TouchableOpacity
-            style={styles.editIconButton}
-            onPress={handleEdit}
-          >
-            <Ionicons name="create-outline" size={24} color="#3b82f6" />
-          </TouchableOpacity>
-        )}
-      </View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Settings</Text>
+          {!isEditing && user && (
+            <TouchableOpacity
+              style={styles.editIconButton}
+              onPress={handleEdit}
+            >
+              <Ionicons name="create-outline" size={24} color="#3b82f6" />
+            </TouchableOpacity>
+          )}
+        </View>
 
-      <View style={styles.profilePictureContainer}>
+        <View style={styles.profilePictureContainer}>
         <TouchableOpacity
           onPress={isEditing ? handlePickImage : undefined}
           disabled={!isEditing}
@@ -369,6 +376,17 @@ export default function Settings() {
             </View>
           )}
 
+          {/* Terms of Service & EULA (required for App Store) */}
+          <TouchableOpacity
+            style={styles.termsLinkRow}
+            onPress={() => router.push("/(auth)/terms")}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="document-text-outline" size={20} color="#60a5fa" />
+            <Text style={styles.termsLinkText}>Terms of Service & EULA</Text>
+            <Ionicons name="chevron-forward" size={20} color="#64748b" />
+          </TouchableOpacity>
+
           {/* Log Out and Delete Account Buttons */}
           <View style={styles.logoutRow}>
             <TouchableOpacity
@@ -417,6 +435,7 @@ export default function Settings() {
       ) : (
         <Text style={styles.label}>Not logged in</Text>
       )}
+      </ScrollView>
 
       {/* Delete Account Confirmation Dialog */}
       <Modal
@@ -468,8 +487,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0d1117",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 24,
+    paddingBottom: 40,
   },
   header: {
     flexDirection: "row",
@@ -601,6 +626,20 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  termsLinkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+  },
+  termsLinkText: {
+    flex: 1,
+    color: "#60a5fa",
+    fontSize: 15,
+    fontWeight: "500",
   },
   logoutRow: {
     flexDirection: "row",

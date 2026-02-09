@@ -21,6 +21,7 @@ export default function SignUp() {
   const [age, setAge] = useState("");    // new field
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const router = useRouter();
 
@@ -32,6 +33,10 @@ export default function SignUp() {
   };
 
   const handleSignUp = async () => {
+    if (!agreedToTerms) {
+      setErrorMessage("You must agree to the Terms of Service and EULA to sign up.");
+      return;
+    }
     setErrorMessage(""); // Clear previous errors
     try {
       const ageNumber = age ? (parseInt(age, 10) || undefined) : undefined;
@@ -165,6 +170,29 @@ export default function SignUp() {
             </TouchableOpacity>
           </View>
 
+          {/* Terms & EULA agreement */}
+          <TouchableOpacity
+            style={styles.termsRow}
+            onPress={() => setAgreedToTerms((v) => !v)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
+              {agreedToTerms ? (
+                <Ionicons name="checkmark" size={16} color="#fff" />
+              ) : null}
+            </View>
+            <Text style={styles.termsLabel}>
+              I agree to the{" "}
+              <Text
+                style={styles.termsLink}
+                onPress={() => router.push("/(auth)/terms")}
+              >
+                Terms of Service & EULA
+              </Text>
+              , which state there is no tolerance for objectionable content or abusive users.
+            </Text>
+          </TouchableOpacity>
+
           {/* Error Message */}
           {errorMessage ? (
             <View style={styles.errorContainer}>
@@ -174,8 +202,9 @@ export default function SignUp() {
           ) : null}
 
           <TouchableOpacity
-            style={styles.primaryButton}
+            style={[styles.primaryButton, !agreedToTerms && styles.primaryButtonDisabled]}
             onPress={handleSignUp}
+            disabled={!agreedToTerms}
           >
             <Text style={styles.primaryText}>Sign Up</Text>
           </TouchableOpacity>
@@ -226,6 +255,27 @@ const styles = StyleSheet.create({
   },
   passwordRow: { flexDirection: "row", alignItems: "center" },
   eyeButton: { padding: 8 },
+  termsRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginTop: 20,
+    gap: 10,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "#475569",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: "#2563eb",
+    borderColor: "#2563eb",
+  },
+  termsLabel: { flex: 1, color: "#9AA4B2", fontSize: 13, lineHeight: 20 },
+  termsLink: { color: "#60a5fa", fontWeight: "600" },
   primaryButton: {
     backgroundColor: "#2563eb",
     paddingVertical: 14,
@@ -233,6 +283,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 24,
   },
+  primaryButtonDisabled: { opacity: 0.5 },
   primaryText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   forgotPasswordButton: {
     alignSelf: "flex-end",
